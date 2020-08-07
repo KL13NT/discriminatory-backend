@@ -1,11 +1,11 @@
-import * as admin from 'firebase-admin'
-import validators from '../validators/auth'
+const admin = require('firebase-admin')
+const validators = require('../validators/auth')
 
 const SERVICE_ACC = require('../discriminatory-17437-firebase-adminsdk-1z1nh-15c9bae0f2.json')
 const headers = { 'Content-Type': 'application/json' }
 
 admin.initializeApp({
-	credential: credential.cert(SERVICE_ACC),
+	credential: admin.credential.cert(SERVICE_ACC),
 	databaseURL: 'https://discriminatory-17437.firebaseio.com'
 })
 

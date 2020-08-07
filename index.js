@@ -1,20 +1,32 @@
-const HOST = 'discriminatorynetwork.workers.dev'
-const PATHS = {
-	auth: new RegExp(`^${HOST}\\/auth$`)
+const express = require('express')
+const mongoose = require('mongoose')
+const cors = require('cors')
+const { ApolloServer } = require('apollo-server-express')
+const resolvers = require('./resolvers')
+const types = require('./types')
+
+const config = { port: 3000 }
+
+const startServer = async () => {
+	const app = express()
+
+	const server = new ApolloServer({
+		typeDefs: types,
+		resolvers
+	})
+
+	server.applyMiddleware({ app })
+
+	await mongoose.connect('mongodb://localhost:27017/discriminatory', {
+		useNewUrlParser: true,
+		useUnifiedTopology: true
+	})
+
+	app.listen({ port: config.port }, () =>
+		console.log(
+			`🚀 Server ready at http://localhost:${config.port}${server.graphqlPath}`
+		)
+	)
 }
-const auth = require('./routes/auth')
-const HANDLERS = {
-	auth
-}
 
-addEventListener('fetch', event => {
-	event.respondWith(handleRequest(event.request))
-})
-
-async function handleRequest(request) {
-	const path = Object.keys(PATHS).find(path => request.url.match(PATHS[path]))
-
-	if (!path) return new Response({}, { status: 404 })
-
-	return HANDLERS[path]()
-}
+startServer()
