@@ -5,15 +5,17 @@
 	"description": "A template for kick starting a Cloudflare Workers project",
 	"main": "index.js",
 	"scripts": {
-		"develop": "yarn nodemon index.js",
+		"develop": "yarn nodemon -r dotenv/config index.js",
 		"deploy": "npm install && sudo pm2 start index.js && sudo pm2 startup",
 		"test": "jest --colors --expand --logHeapUsage --config jest.config.js --verbose --coverage --passWithNoTests",
 		"lint": "eslint --ext .js,.jsx ./src --config .eslintrc.js --fix --global window",
-		"fix": "prettier --write **/*.js"
+		"fix": "prettier --write **/*.js",
+		"docs": "graphdoc -s ./types.graphql -o ./docs/schema --force"
 	},
 	"author": "Nabil <nabil.tharwat@outlook.com>",
 	"license": "MIT",
 	"devDependencies": {
+		"@2fd/graphdoc": "^2.4.0",
 		"eslint": "^6.8.0",
 		"eslint-config-airbnb": "^18.1.0",
 		"eslint-plugin-import": "^2.20.2",
@@ -26,11 +28,14 @@
 		"@hapi/joi": "^17.1.1",
 		"apollo-server-express": "^2.16.1",
 		"cors": "^2.8.5",
+		"dotenv": "^8.2.0",
 		"express": "^4.17.1",
 		"express-graphql": "^0.11.0",
+		"firebase": "^7.17.2",
 		"firebase-admin": "^9.0.0",
 		"graphql": "^15.3.0",
 		"graphql-tag": "^2.11.0",
+		"jsonwebtoken": "^8.5.1",
 		"mongoose": "^5.9.27"
 	}
 }

@@ -1,37 +1,45 @@
 const Joi = require('@hapi/joi')
+const {
+	DISPLAYNAME_MAX,
+	DISPLAYNAME_MIN,
+	ID_MAX,
+	ID_MIN,
+	TAGLINE_MAX,
+	TAGLINE_MIN,
+	LOCATION_MAX,
+	LOCATION_MIN
+} = require('../constants')
 
-const register = Joi.object({
-	name: Joi.string()
+const profile = Joi.object({
+	displayName: Joi.string()
 		.pattern(/^[a-zA-Z ]+$/)
-		.min(4)
-		.max(36)
+		.trim()
+		.min(DISPLAYNAME_MIN)
+		.max(DISPLAYNAME_MAX)
 		.required(),
 
-	password: Joi.string()
-		.pattern(
-			/(?=(.*[0-9]))(?=.*[\!@#$%^&*()\\[\]{}\-_+=~`|:;"'<>,.\/?])(?=.*[a-z])(?=(.*[A-Z]))(?=(.*))/
-		)
-		.min(8)
-		.max(30),
+	dateofbirth: Joi.date()
+		.max(new Date(new Date() - 409968000000)) // 13 years old
+		.required(),
+	// .error(() => Error('You must be over the age of 13 to use the service.')),
 
-	email: Joi.string().email()
+	location: Joi.string()
+		.min(LOCATION_MIN)
+		.max(LOCATION_MAX)
+		.required(),
+
+	tagline: Joi.string()
+		.min(TAGLINE_MIN)
+		.max(TAGLINE_MAX),
+
+	id: Joi.string()
+		.required()
+		.min(ID_MIN)
+		.max(ID_MAX),
+
+	email: Joi.string()
+		.email()
+		.required()
 })
-	.with('name', 'email')
-	.with('email', 'password')
-	.with('name', 'password')
 
-const login = Joi.object({
-	password: Joi.string()
-		.pattern(
-			/(?=(.*[0-9]))(?=.*[\!@#$%^&*()\\[\]{}\-_+=~`|:;"'<>,.\/?])(?=.*[a-z])(?=(.*[A-Z]))(?=(.*))/
-		)
-		.min(8)
-		.max(30),
-
-	email: Joi.string().email()
-})
-	.with('name', 'email')
-	.with('email', 'password')
-	.with('name', 'password')
-
-module.exports = { register, login }
+module.exports = { profile }

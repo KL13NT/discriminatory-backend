@@ -1,0 +1,14 @@
+const POST_CONTENT_MIN = 1
+const POST_CONTENT_MAX = 160
+
+const LOCATION_MAX = 120
+const LOCATION_MIN = 40
+
+const ID_MAX = 160
+const ID_MIN = 20
+
+const TAGLINE_MAX = 160
+const TAGLINE_MIN = 0
+
+const DISPLAYNAME_MAX = 60
+const DISPLAYNAME_MIN = 1
