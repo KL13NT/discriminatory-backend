@@ -1,0 +1,18 @@
+type Mutation {
+	profile(
+		displayName: String!
+		email: String!
+		dateofbirth: String!
+		location: String!
+		tagline: String!
+		id: String!
+	): User!
+
+	post(content: String!, location: String!): Post!
+}
+
+type Query {
+	profile(id: String!): User
+	posts(id: String!): [Post!]
+	feed(id: String!): [Post!]
+}

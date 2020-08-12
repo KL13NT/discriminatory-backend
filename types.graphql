@@ -1,0 +1,38 @@
+scalar DATE
+# union ACCESS_LEVEL = ADMIN | SUPPORT | VERIFIED | GENERAL | ANONYMOUS
+# union REACTION = UPVOTE | DOWNVOTE
+
+type User {
+	displayName: String!
+	email: String!
+	location: String!
+	dateofbirth: DATE!
+	tagline: String!
+	accessLevel: String!
+	created: DATE!
+	id: ID!
+}
+
+type Post {
+	author: User!
+	location: String!
+	content: String!
+	reactions: [Reaction!]!
+	comments: [Comment!]!
+	created: DATE!
+	id: ID!
+}
+
+type Reaction {
+	author: User!
+	reaction: String!
+	created: DATE!
+	id: ID!
+}
+
+type Comment {
+	author: User!
+	content: String!
+	created: DATE!
+	id: ID!
+}
