@@ -3,8 +3,13 @@ const mongoose = require('mongoose')
 const admin = require('firebase-admin')
 const { readFileSync } = require('fs')
 const { resolve } = require('path')
-const { ApolloServer } = require('apollo-server-express')
-const { getUser, verifyToken } = require('./utils')
+const { ValidationError } = require('@hapi/joi')
+const { verifyToken } = require('./utils')
+const {
+	ApolloServer,
+	UserInputError,
+	AuthenticationError
+} = require('apollo-server-express')
 
 const readSDL = path =>
 	readFileSync(resolve(__dirname, path), {
@@ -40,13 +45,29 @@ const startServer = async () => {
 				return {
 					token,
 					decodedToken,
-					authenticated
+					authenticated,
+					verified: decodedToken.email_verified
 				}
 			} catch (error) {
 				return {
 					token
 				}
 			}
+		},
+		formatError: err => {
+			const { originalError } = err
+
+			if (originalError instanceof ValidationError) {
+				return new UserInputError(`[Validation] ${originalError.message}`, {
+					...originalError.details[0]
+				})
+			} else if (
+				originalError.errorInfo &&
+				originalError.errorInfo.code.startsWith('auth')
+			) {
+				return new AuthenticationError(`[Auth] ${err.message}`)
+			}
+			return err
 		}
 	})
 
