@@ -37,3 +37,9 @@ type Comment {
 	created: DATE!
 	id: ID!
 }
+
+type Report {
+	post: ID!
+	reason: String!
+	author: User
+}

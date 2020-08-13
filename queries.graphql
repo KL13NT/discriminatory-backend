@@ -9,10 +9,16 @@ type Mutation {
 	): User!
 
 	post(content: String!, location: String!): ID!
+
+	react(post: ID!, reaction: String!): ID!
+	delete(post: ID!): ID!
+	pin(post: ID!): ID!
+	report(post: ID!, reason: String!): ID!
+	comment(post: ID!, content: String!): ID!
 }
 
 type Query {
 	profile(id: String!): User
-	posts(id: String!): [Post!]
+	# posts(id: String!, limit: Int!): [Post!]
 	feed(id: String!): [Post!]
 }
