@@ -3,7 +3,7 @@ const { model, Types } = require('mongoose')
 const Post = model('Post', {
 	content: { type: String, required: true },
 	location: { type: String, required: true },
-	created: { type: Date, required: true, default: Date.now },
+	created: { type: Number, required: true },
 	author: { type: String, required: true, index: true }
 })
 
