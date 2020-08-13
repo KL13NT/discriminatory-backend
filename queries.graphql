@@ -8,7 +8,7 @@ type Mutation {
 		id: String!
 	): User!
 
-	post(content: String!, location: String!): Post!
+	post(content: String!, location: String!): ID!
 }
 
 type Query {

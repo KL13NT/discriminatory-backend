@@ -21,6 +21,10 @@ const isAuthorized = async (resourceId, user) => {
 	return user.emailVerified && resourceId === user.uid
 }
 
+const joiToApollo = (errors) =>{
+
+}
+
 module.exports = {
 	getUser,
 	verifyToken,

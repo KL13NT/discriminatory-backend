@@ -10,6 +10,7 @@ type User {
 	tagline: String!
 	accessLevel: String!
 	created: DATE!
+	pinned: ID
 	id: ID!
 }
 

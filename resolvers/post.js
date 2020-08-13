@@ -6,9 +6,7 @@ const {
 	LOCATION_MAX,
 	LOCATION_MIN
 } = require('../constants')
-const User = require('../models/User')
 const { AuthenticationError } = require('apollo-server-express')
-const { Types } = require('mongoose')
 
 const validators = {
 	createPost: Joi.object({
