@@ -10,7 +10,7 @@
 		"test": "jest --colors --expand --logHeapUsage --config jest.config.js --verbose --coverage --passWithNoTests",
 		"lint": "eslint --ext .js ./ --config .eslintrc.js --fix --global window",
 		"fix": "prettier --write **/*.js",
-		"docs": "graphdoc -s ./types.graphql -o ./docs/schema --force"
+		"docs": "node ./scripts/docs.js"
 	},
 	"author": "Nabil <nabil.tharwat@outlook.com>",
 	"license": "MIT",

@@ -45,6 +45,16 @@
                 Boolean
             </a>
         </li>
+        <li  title="DATE">
+            <a href="date.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                DATE
+            </a>
+        </li>
+        <li  title="ID">
+            <a href="id.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ID
+            </a>
+        </li>
         <li  title="String">
             <a href="string.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 String
@@ -70,6 +80,26 @@
 <div class="slds-grid slds-grid--vertical slds-navigation-list--vertical">
     <h4 class="slds-text-title--caps slds-p-around--medium">Objects</h4>
     <ul>
+        <li  title="Comment">
+            <a href="comment.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Comment
+            </a>
+        </li>
+        <li  title="Post">
+            <a href="post.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Post
+            </a>
+        </li>
+        <li  title="Reaction">
+            <a href="reaction.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Reaction
+            </a>
+        </li>
+        <li  title="Report">
+            <a href="report.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Report
+            </a>
+        </li>
         <li  title="User">
             <a href="user.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 User
@@ -153,7 +183,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">Mutation</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>displayName</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>email</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>dateofbirth</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>location</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>tagline</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>id</strong>: </span></span></li><li><span class="tab"><span class="meta">profile</span>(</span></li><li><span class="tab"><span class="tab"><span class="meta">displayName</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">email</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">dateofbirth</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">location</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">tagline</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">id</span>: <a class="support type" href="string.doc.html">String</a>!</span></span></li><li><span class="tab">): <a class="support type" href="user.doc.html">User</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">Mutation</span> {</li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>displayName</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>email</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>dateofbirth</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>location</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>tagline</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>id</strong>: </span></span></li><li><span class="tab"><span class="meta">profile</span>(</span></li><li><span class="tab"><span class="tab"><span class="meta">displayName</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">email</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">dateofbirth</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">location</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">tagline</span>: <a class="support type" href="string.doc.html">String</a>!,</span></span></li><li><span class="tab"><span class="tab"><span class="meta">id</span>: <a class="support type" href="string.doc.html">String</a>!</span></span></li><li><span class="tab">): <a class="support type" href="user.doc.html">User</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>content</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>location</strong>: </span></span></li><li><span class="tab"><span class="meta">post</span>(<span class="meta">content</span>: <a class="support type" href="string.doc.html">String</a>!, <span class="meta">location</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="id.doc.html">ID</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>post</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>reaction</strong>: </span></span></li><li><span class="tab"><span class="meta">react</span>(<span class="meta">post</span>: <a class="support type" href="id.doc.html">ID</a>!, <span class="meta">reaction</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="id.doc.html">ID</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>post</strong>: </span></span></li><li><span class="tab"><span class="meta">delete</span>(<span class="meta">post</span>: <a class="support type" href="id.doc.html">ID</a>!): <a class="support type" href="id.doc.html">ID</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>post</strong>: </span></span></li><li><span class="tab"><span class="meta">pin</span>(<span class="meta">post</span>: <a class="support type" href="id.doc.html">ID</a>!): <a class="support type" href="id.doc.html">ID</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>post</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>reason</strong>: </span></span></li><li><span class="tab"><span class="meta">report</span>(<span class="meta">post</span>: <a class="support type" href="id.doc.html">ID</a>!, <span class="meta">reason</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="id.doc.html">ID</a>! </span></li><li></li><li><span class="tab"><span class="comment line"># Arguments</span></span></li><li><span class="tab"><span class="comment line">#   <strong>post</strong>: </span></span></li><li><span class="tab"><span class="comment line">#   <strong>content</strong>: </span></span></li><li><span class="tab"><span class="meta">comment</span>(<span class="meta">post</span>: <a class="support type" href="id.doc.html">ID</a>!, <span class="meta">content</span>: <a class="support type" href="string.doc.html">String</a>!): <a class="support type" href="id.doc.html">ID</a>! </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>

@@ -45,6 +45,16 @@
                 Boolean
             </a>
         </li>
+        <li  title="DATE">
+            <a href="date.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                DATE
+            </a>
+        </li>
+        <li  title="ID">
+            <a href="id.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                ID
+            </a>
+        </li>
         <li  title="String">
             <a href="string.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 String
@@ -70,6 +80,26 @@
 <div class="slds-grid slds-grid--vertical slds-navigation-list--vertical">
     <h4 class="slds-text-title--caps slds-p-around--medium">Objects</h4>
     <ul>
+        <li  title="Comment">
+            <a href="comment.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Comment
+            </a>
+        </li>
+        <li  title="Post">
+            <a href="post.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Post
+            </a>
+        </li>
+        <li  title="Reaction">
+            <a href="reaction.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Reaction
+            </a>
+        </li>
+        <li  title="Report">
+            <a href="report.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
+                Report
+            </a>
+        </li>
         <li class="slds-is-active" title="User">
             <a href="user.doc.html" class="slds-navigation-list--vertical__action slds-text-link--reset slds-truncate">
                 User
@@ -153,7 +183,7 @@
             </a>
             GraphQL Schema definition
         </h2>
-        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">User</span> {</li><li></li><li><span class="tab"><span class="meta">id</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">displayName</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">email</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">location</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">dateofbirth</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">tagline</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li>}</li></ul></code>
+        <code class="highlight"><ul class="code" style="padding-left:42px"><li><span class="keyword operator ts">type</span> <span class="identifier">User</span> {</li><li></li><li><span class="tab"><span class="meta">displayName</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">email</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">location</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">dateofbirth</span>: <a class="support type" href="date.doc.html">DATE</a>! </span></li><li></li><li><span class="tab"><span class="meta">tagline</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">accessLevel</span>: <a class="support type" href="string.doc.html">String</a>! </span></li><li></li><li><span class="tab"><span class="meta">created</span>: <a class="support type" href="date.doc.html">DATE</a>! </span></li><li></li><li><span class="tab"><span class="meta">pinned</span>: <a class="support type" href="id.doc.html">ID</a> </span></li><li></li><li><span class="tab"><span class="meta">id</span>: <a class="support type" href="id.doc.html">ID</a>! </span></li><li>}</li></ul></code>
     </div>
 </section>
 <section>
@@ -164,7 +194,7 @@
             </a>
             Require by
         </h2>
-        <ul class="require-by"><li><a href="mutation.doc.html" title="Mutation - ">Mutation<em></em></a><li><li><a href="query.doc.html" title="Query - ">Query<em></em></a><li></ul>
+        <ul class="require-by"><li><a href="comment.doc.html" title="Comment - ">Comment<em></em></a><li><li><a href="mutation.doc.html" title="Mutation - ">Mutation<em></em></a><li><li><a href="post.doc.html" title="Post - ">Post<em></em></a><li><li><a href="query.doc.html" title="Query - ">Query<em></em></a><li><li><a href="reaction.doc.html" title="Reaction - ">Reaction<em></em></a><li><li><a href="report.doc.html" title="Report - ">Report<em></em></a><li></ul>
     </div>
 </section>
 <footer>
