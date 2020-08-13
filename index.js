@@ -1,10 +1,10 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const admin = require('firebase-admin')
+const depthLimit = require('graphql-depth-limit')
 const { readFileSync } = require('fs')
 const { resolve } = require('path')
 const { ValidationError } = require('@hapi/joi')
-const { verifyToken } = require('./utils')
 const {
 	ApolloServer,
 	UserInputError,
@@ -16,7 +16,11 @@ const readSDL = path =>
 		encoding: 'utf-8'
 	})
 
+const { verifyToken } = require('./utils')
 const resolvers = require('./resolvers')
+const firebaseCreds = require('./admin.firebase.json')
+const limitLimit = require('./validation/limitLimit')
+
 const types = readSDL('./types.graphql')
 const queries = readSDL('./queries.graphql')
 const typeDefs = `${types}\n${queries}`
@@ -24,7 +28,7 @@ const typeDefs = `${types}\n${queries}`
 const config = {
 	port: 3000,
 	databaseURL: 'https://discriminatory-17437.firebaseio.com',
-	credential: admin.credential.cert(require('./admin.firebase.json'))
+	credential: admin.credential.cert(firebaseCreds)
 }
 
 admin.initializeApp(config)
@@ -40,7 +44,7 @@ const startServer = async () => {
 
 			try {
 				const decodedToken = await verifyToken(token)
-				const authenticated = decodedToken ? true : false
+				const authenticated = !!decodedToken
 
 				return {
 					token,
@@ -61,14 +65,16 @@ const startServer = async () => {
 				return new UserInputError(`[Validation] ${originalError.message}`, {
 					...originalError.details[0]
 				})
-			} else if (
+			}
+			if (
 				originalError.errorInfo &&
 				originalError.errorInfo.code.startsWith('auth')
 			) {
 				return new AuthenticationError(`[Auth] ${err.message}`)
 			}
 			return err
-		}
+		},
+		validationRules: [depthLimit(3), limitLimit(20)]
 	})
 
 	server.applyMiddleware({ app })
@@ -80,6 +86,7 @@ const startServer = async () => {
 	})
 
 	app.listen({ port: config.port }, () =>
+		// eslint-disable-next-line no-console
 		console.log(
 			`🚀 Server ready at http://localhost:${config.port}${server.graphqlPath}`
 		)

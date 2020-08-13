@@ -8,7 +8,7 @@
 		"develop": "yarn nodemon -r dotenv/config index.js",
 		"deploy": "npm install && sudo pm2 start index.js && sudo pm2 startup",
 		"test": "jest --colors --expand --logHeapUsage --config jest.config.js --verbose --coverage --passWithNoTests",
-		"lint": "eslint --ext .js,.jsx ./src --config .eslintrc.js --fix --global window",
+		"lint": "eslint --ext .js ./ --config .eslintrc.js --fix --global window",
 		"fix": "prettier --write **/*.js",
 		"docs": "graphdoc -s ./types.graphql -o ./docs/schema --force"
 	},
@@ -16,9 +16,12 @@
 	"license": "MIT",
 	"devDependencies": {
 		"@2fd/graphdoc": "^2.4.0",
-		"eslint": "^6.8.0",
+		"babel-eslint": "^10.1.0",
+		"eslint": "7.2.0",
 		"eslint-config-airbnb": "^18.1.0",
-		"eslint-plugin-import": "^2.20.2",
+		"eslint-config-airbnb-base": "^14.2.0",
+		"eslint-config-recommended": "^4.1.0",
+		"eslint-plugin-import": "2.21.2",
 		"eslint-plugin-sort-destructure-keys": "^1.3.3",
 		"jest": "^25.2.6",
 		"nodemon": "^2.0.4",
@@ -35,6 +38,7 @@
 		"firebase": "^7.17.2",
 		"firebase-admin": "^9.0.0",
 		"graphql": "^15.3.0",
+		"graphql-depth-limit": "^1.1.0",
 		"graphql-tag": "^2.11.0",
 		"jsonwebtoken": "^8.5.1",
 		"mongoose": "^5.9.27"
