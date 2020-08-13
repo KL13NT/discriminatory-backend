@@ -120,3 +120,6 @@ dist
 .pnp.*
 
 data/
+
+.vscode
+docs
