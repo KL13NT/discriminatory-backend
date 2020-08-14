@@ -2,7 +2,7 @@ const { RateLimitError } = require('../errors')
 
 const limitLimit = limit => validationContext => {
 	const { definitions } = validationContext.getDocument()
-	let found = {}
+	let found = null
 
 	definitions.forEach(def => {
 		if (def.operation !== 'query') return
