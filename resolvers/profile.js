@@ -1,4 +1,6 @@
 const Joi = require('@hapi/joi')
+const firebase = require('firebase-admin')
+const { AuthenticationError, ForbiddenError } = require('apollo-server-express')
 const {
 	DISPLAYNAME_MAX,
 	DISPLAYNAME_MIN,
@@ -10,7 +12,7 @@ const {
 	PROFILE_LOCATION_MIN
 } = require('../constants')
 const User = require('../models/User')
-const firebase = require('firebase-admin')
+const { isAuthorized, getUser } = require('../utils')
 
 const validators = {
 	updateProfile: Joi.object({
