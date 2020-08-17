@@ -18,11 +18,12 @@ module.exports = {
 	DISPLAYNAME_MIN: 2,
 
 	RATE_LIMIT_DUPLICATE: 3600000, // 1 hour
-	RATE_LIMIT_GENERAL: 60000, // 1 minute
-	RATE_LIMIT_BASE: 1000, // 1 minute
+	RATE_LIMIT_GENERAL: 60 * 1000, // 1 minute
+	RATE_LIMIT_BASE: 200, // 1 second
 
 	FEED_LIMIT_MAX: 20, // query `limit`
 	FEED_LIMIT_QUERY_PERIOD: 60 * 1000, // time required for cache re-validations
+	FEED_COMMENTS_PER_POST: 10,
 
 	MEMBER_FOLLOW_LIMIT: 100
 }

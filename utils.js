@@ -2,11 +2,11 @@ const admin = require('firebase-admin')
 const { AuthenticationError } = require('apollo-server-express')
 
 const verifyToken = async token =>
-	admin.auth().verifyIdToken(token.replace('Bearer ', ''), true)
+	admin.auth().verifyIdToken(token.replace('Bearer ', ''), false)
 
 const getUser = async uid => {
 	try {
-		return await admin.auth().getUser(uid)
+		return admin.auth().getUser(uid)
 	} catch (err) {
 		return null
 	}
@@ -17,8 +17,8 @@ const getUser = async uid => {
  * @param {uid} resourceId
  * @param {context} param1
  */
-const isAuthorized = async (resourceId, user) =>
-	user.emailVerified && resourceId === user.uid
+const isAuthorized = async (resourceOwnerId, user) =>
+	resourceOwnerId === user.uid
 
 const enforceVerification = ({ authenticated, verified }) => {
 	if (!authenticated || !verified) {
