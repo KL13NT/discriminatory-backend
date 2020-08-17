@@ -7,6 +7,7 @@ const Reaction = require('../models/Reaction')
 const User = require('../models/User')
 const Report = require('../models/Report')
 const Comment = require('../models/Comment')
+const { enforceVerification } = require('../utils')
 
 const {
 	POST_CONTENT_MAX,
@@ -24,6 +25,11 @@ const {
 	NotFoundError
 } = require('../errors')
 
+const IDValidator = Joi.string()
+	.trim()
+	.min(1)
+	.required()
+
 const validators = {
 	createPost: Joi.object({
 		content: Joi.string()
@@ -40,10 +46,7 @@ const validators = {
 	}),
 
 	react: Joi.object({
-		post: Joi.string()
-			.trim()
-			.min(1)
-			.required(),
+		post: IDValidator,
 
 		reaction: Joi.string()
 			.trim()
@@ -52,17 +55,11 @@ const validators = {
 	}),
 
 	deleteOrPin: Joi.object({
-		post: Joi.string()
-			.trim()
-			.min(1)
-			.required()
+		post: IDValidator
 	}),
 
 	report: Joi.object({
-		post: Joi.string()
-			.trim()
-			.min(1)
-			.required(),
+		post: IDValidator,
 
 		reason: Joi.string()
 			.trim()
@@ -71,25 +68,25 @@ const validators = {
 	}),
 
 	comment: Joi.object({
-		post: Joi.string()
-			.trim()
-			.min(1)
-			.required(),
+		post: IDValidator,
 
 		content: Joi.string()
 			.trim()
 			.min(1)
 			.max(160)
 			.required()
-	})
-}
+	}),
 
-const enforceVerification = ({ authenticated, verified }) => {
-	if (!authenticated || !verified) {
-		throw new AuthenticationError(
-			'[Auth] You must be registered and verified to do this.'
-		)
-	}
+	posts: Joi.object({
+		limit: Joi.number()
+			.min(5)
+			.max(20)
+			.required(),
+
+		member: IDValidator,
+
+		before: Joi.date().required()
+	})
 }
 
 const createPost = async (

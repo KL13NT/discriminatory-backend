@@ -1,8 +1,8 @@
 const admin = require('firebase-admin')
+const { AuthenticationError } = require('apollo-server-express')
 
-const verifyToken = async token => {
-	return await admin.auth().verifyIdToken(token.replace('Bearer ', ''), true)
-}
+const verifyToken = async token =>
+	admin.auth().verifyIdToken(token.replace('Bearer ', ''), true)
 
 const getUser = async uid => {
 	try {
@@ -17,16 +17,20 @@ const getUser = async uid => {
  * @param {uid} resourceId
  * @param {context} param1
  */
-const isAuthorized = async (resourceId, user) => {
-	return user.emailVerified && resourceId === user.uid
-}
+const isAuthorized = async (resourceId, user) =>
+	user.emailVerified && resourceId === user.uid
 
-const joiToApollo = (errors) => {
-
+const enforceVerification = ({ authenticated, verified }) => {
+	if (!authenticated || !verified) {
+		throw new AuthenticationError(
+			'[Auth] You must be registered and verified to do this.'
+		)
+	}
 }
 
 module.exports = {
 	getUser,
 	verifyToken,
-	isAuthorized
+	isAuthorized,
+	enforceVerification
 }

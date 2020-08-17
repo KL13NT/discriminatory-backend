@@ -1,7 +1,9 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const admin = require('firebase-admin')
+const { set, get } = require('./redis') // eslint-disable-line
 const depthLimit = require('graphql-depth-limit')
+
 const { readFileSync } = require('fs')
 const { resolve } = require('path')
 const { ValidationError } = require('@hapi/joi')
@@ -16,7 +18,6 @@ const readSDL = path =>
 		encoding: 'utf-8'
 	})
 
-const { verifyToken } = require('./utils')
 const resolvers = require('./resolvers')
 const firebaseCreds = require('./admin.firebase.json')
 const limitLimit = require('./validation/limitLimit')
@@ -24,6 +25,10 @@ const limitLimit = require('./validation/limitLimit')
 const types = readSDL('./types.graphql')
 const queries = readSDL('./queries.graphql')
 const typeDefs = `${types}\n${queries}`
+
+const { verifyToken } = require('./utils')
+const { RATE_LIMIT_BASE } = require('./constants')
+const { RateLimitError } = require('./errors')
 
 const config = {
 	port: 3000,
@@ -45,6 +50,14 @@ const startServer = async () => {
 			try {
 				const decodedToken = await verifyToken(token)
 				const authenticated = !!decodedToken
+
+				const lastOp = await get(`OP:${decodedToken.uid}`)
+				if (
+					lastOp &&
+					new Date(Number(lastOp)) >= new Date(Date.now() - RATE_LIMIT_BASE)
+				)
+					throw new RateLimitError('[Rate Limit] Whoa, slow down')
+				else set(`OP:${decodedToken.uid}`, Date.now())
 
 				return {
 					token,
