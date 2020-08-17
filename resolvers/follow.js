@@ -1,22 +1,19 @@
 /* eslint-disable no-return-await */
 
 const Joi = require('@hapi/joi')
+
+const User = require('../models/User')
 const Follow = require('../models/Follow')
+
+const { ID } = require('../custom-joi')
 const { enforceVerification } = require('../utils')
 
 const { MEMBER_FOLLOW_LIMIT } = require('../constants')
-
 const { NotFoundError, AccountLimit } = require('../errors')
-const User = require('../models/User')
-
-const IDValidator = Joi.string()
-	.trim()
-	.min(1)
-	.required()
 
 const validators = {
 	follow: Joi.object({
-		member: IDValidator
+		member: ID
 	})
 }
 
@@ -44,7 +41,7 @@ const follow = async (_, data, { decodedToken, authenticated, verified }) => {
 
 	await validators.follow.validateAsync(data)
 
-	const count = await Follow.find({ author: decodedToken.uid }).count()
+	const count = await Follow.find({ author: decodedToken.uid }).countDocuments()
 
 	if (count > MEMBER_FOLLOW_LIMIT)
 		return new AccountLimit(
@@ -55,7 +52,7 @@ const follow = async (_, data, { decodedToken, authenticated, verified }) => {
 
 	if (!user) return NotFoundError('[Not Found] User not found')
 
-	return await Follow.create({
+	return Follow.create({
 		author: decodedToken.uid,
 		following: data.member,
 		created: Date.now()
@@ -63,6 +60,10 @@ const follow = async (_, data, { decodedToken, authenticated, verified }) => {
 }
 
 module.exports = {
-	follow,
-	unfollow
+	mutations: {
+		follow,
+		unfollow
+	},
+	queries: {},
+	nested: {}
 }

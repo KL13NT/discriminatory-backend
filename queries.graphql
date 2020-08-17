@@ -1,24 +1,30 @@
 type Mutation {
-	profile(
+	# ACTIONS RELATED TO MEMBER ACCOUNTS
+	account(
 		displayName: String!
 		email: String!
 		dateofbirth: String!
 		location: String!
 		tagline: String!
-		id: String!
 	): User!
 
+	# ACTIONS RELATED TO POSTS
 	post(content: String!, location: String!): ID!
-
-	react(post: ID!, reaction: String!): ID!
 	delete(post: ID!): ID!
+
+	react(post: ID!, reaction: String!): Reaction!
+	comment(post: ID!, content: String!): ID!
+
 	pin(post: ID!): ID!
 	report(post: ID!, reason: String!): ID!
-	comment(post: ID!, content: String!): ID!
+
+	# ACTIONS RELATED TO MEMBER-RELATIONS
+	follow(member: ID!): Follow!
+	unfollow(member: ID!): Follow!
 }
 
 type Query {
-	profile(id: String!): User
-	# posts(id: String!, limit: Int!): [Post!]
-	feed(id: String!): [Post!]
+	account: User
+	posts(member: String!, limit: Int!): [Post!]
+	feed(limit: Int!, before: ID): [Post!]!
 }

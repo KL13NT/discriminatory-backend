@@ -4,7 +4,7 @@ const Comment = model('Comment', {
 	author: { type: String, required: true, index: true },
 	content: { type: String, required: true },
 	created: { type: Date, required: true, default: Date.now },
-	post: { type: Types.ObjectId, index: true }
+	post: { type: String, required: true, index: true }
 })
 
 module.exports = Comment

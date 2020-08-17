@@ -1,10 +1,10 @@
-const { model, Types } = require('mongoose')
+const { model } = require('mongoose')
 
 const Reaction = model('Reaction', {
 	author: { type: String, required: true },
 	reaction: { type: String, required: true },
 	created: { type: Date, required: true, default: Date.now },
-	post: { type: Types.ObjectId, index: true }
+	post: { type: String, required: true, index: true }
 })
 
 module.exports = Reaction

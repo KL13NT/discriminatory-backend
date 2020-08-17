@@ -12,10 +12,11 @@ const {
 	PROFILE_LOCATION_MIN
 } = require('../constants')
 const User = require('../models/User')
-const { isAuthorized, getUser } = require('../utils')
+const { isAuthorized, getUser, enforceVerification } = require('../utils')
+const { ID } = require('../custom-joi')
 
 const validators = {
-	updateProfile: Joi.object({
+	account: Joi.object({
 		displayName: Joi.string()
 			.pattern(/^[a-zA-Z ]+$/)
 			.trim()
@@ -37,59 +38,44 @@ const validators = {
 			.min(TAGLINE_MIN)
 			.max(TAGLINE_MAX),
 
-		id: Joi.string()
-			.required()
-			.min(ID_MIN)
-			.max(ID_MAX),
-
 		email: Joi.string()
 			.email()
 			.required()
 	})
 }
 
-const updateProfile = async (_, data, { decodedToken, authenticated }) => {
-	if (!authenticated)
-		return new AuthenticationError(
-			'[Auth] You need to be registered to do this'
-		)
+const updateAccount = async (
+	_,
+	data,
+	{ decodedToken, verified, authenticated }
+) => {
+	enforceVerification({ authenticated, verified })
 
-	if (!(await isAuthorized(data.id, await getUser(decodedToken.uid))))
-		return new ForbiddenError(
-			'[Forbidden] You can not modify this resource. You may not have sufficient permissions or your email is not verified.'
-		)
+	await validators.account.validateAsync(data)
 
-	await validators.updateProfile.validateAsync(data)
-
-	return await User.findOneAndUpdate(
-		{ _id: data.id },
-		{ ...data, _id: data.id },
+	return User.findOneAndUpdate(
+		{ _id: decodedToken.uid },
+		{ ...data },
 		{
-			upsert: true
+			upsert: true,
+			new: true
 		}
 	)
 }
 
-const getProfile = async (_, { id: _id }) => {
-	const validator = Joi.object({
-		id: Joi.string()
-			.min(1)
-			.max(128)
-	})
-
-	await validator.validateAsync({ id: _id })
-
-	const user = await firebase.auth().getUser(_id)
+const getAccount = async (_, _2, { decodedToken }) => {
+	const user = await firebase.auth().getUser(decodedToken.uid)
 	if (!user) throw Error('A user with this id was not found')
 
-	return await User.findOne({ _id })
+	return User.findOne({ _id: decodedToken.uid })
 }
 
 module.exports = {
 	mutations: {
-		profile: updateProfile
+		account: updateAccount
 	},
 	queries: {
-		profile: getProfile
-	}
+		account: getAccount
+	},
+	nested: {}
 }

@@ -2,12 +2,15 @@
 
 const { AuthenticationError } = require('apollo-server-express')
 const Joi = require('@hapi/joi')
+
 const Post = require('../models/Post')
 const Reaction = require('../models/Reaction')
 const User = require('../models/User')
 const Report = require('../models/Report')
 const Comment = require('../models/Comment')
+
 const { enforceVerification } = require('../utils')
+const { ID } = require('../custom-joi')
 
 const {
 	POST_CONTENT_MAX,
@@ -25,11 +28,6 @@ const {
 	NotFoundError
 } = require('../errors')
 
-const IDValidator = Joi.string()
-	.trim()
-	.min(1)
-	.required()
-
 const validators = {
 	createPost: Joi.object({
 		content: Joi.string()
@@ -46,7 +44,7 @@ const validators = {
 	}),
 
 	react: Joi.object({
-		post: IDValidator,
+		post: ID,
 
 		reaction: Joi.string()
 			.trim()
@@ -55,11 +53,11 @@ const validators = {
 	}),
 
 	deleteOrPin: Joi.object({
-		post: IDValidator
+		post: ID
 	}),
 
 	report: Joi.object({
-		post: IDValidator,
+		post: ID,
 
 		reason: Joi.string()
 			.trim()
@@ -68,7 +66,7 @@ const validators = {
 	}),
 
 	comment: Joi.object({
-		post: IDValidator,
+		post: ID,
 
 		content: Joi.string()
 			.trim()
@@ -83,7 +81,7 @@ const validators = {
 			.max(20)
 			.required(),
 
-		member: IDValidator,
+		member: ID,
 
 		before: Joi.date().required()
 	})
@@ -106,7 +104,7 @@ const createPost = async (
 				created: { $gte: Date.now() - RATE_LIMIT_DUPLICATE }, // duplicate in last hour
 				content: data.content
 			},
-			{ created: { $gte: Date.now() - 60000 } } // in last minute
+			{ created: { $gte: Date.now() - RATE_LIMIT_GENERAL } } // in last minute
 		])
 	) {
 		return new RateLimitError(
@@ -137,10 +135,10 @@ const react = async (_, data, { authenticated, verified }) => {
 			post: data.post
 		},
 		{ ...data, author: post.author, created: Date.now() },
-		{ upsert: true }
+		{ upsert: true, new: true }
 	).exec()
 
-	return reaction._id
+	return reaction
 }
 
 const deletePost = async (_, data, ctx) => {
@@ -184,7 +182,8 @@ const pin = async (_, data, ctx) => {
 
 	await User.findOneAndUpdate(
 		{ _id: ctx.decodedToken.uid },
-		{ pinned: post._id }
+		{ pinned: post._id },
+		{ new: true }
 	)
 
 	return post._id
@@ -259,5 +258,6 @@ module.exports = {
 		report,
 		comment
 	},
-	queries: {}
+	queries: {},
+	nested: {}
 }
