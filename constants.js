@@ -17,6 +17,12 @@ module.exports = {
 	DISPLAYNAME_MAX: 60,
 	DISPLAYNAME_MIN: 2,
 
-	RATE_LIMIT_DUPLICATE: 3600000,
-	RATE_LIMIT_GENERAL: 60000
+	RATE_LIMIT_DUPLICATE: 3600000, // 1 hour
+	RATE_LIMIT_GENERAL: 60000, // 1 minute
+	RATE_LIMIT_BASE: 1000, // 1 minute
+
+	FEED_LIMIT_MAX: 20, // query `limit`
+	FEED_LIMIT_QUERY_PERIOD: 60 * 1000, // time required for cache re-validations
+
+	MEMBER_FOLLOW_LIMIT: 100
 }
