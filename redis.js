@@ -1,7 +1,7 @@
 const { promisify } = require('util')
 const redis = require('redis')
 
-const client = redis.createClient({ db: 'discriminatory01' })
+const client = redis.createClient()
 
 client.on('error', error => {
 	// eslint-disable-next-line no-console

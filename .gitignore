@@ -123,3 +123,5 @@ data/
 
 .vscode
 docs
+
+*.rdb
