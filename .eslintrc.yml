@@ -20,6 +20,8 @@ rules:
   implicit-arrow-linebreak: 0
   operator-linebreak: 0
   function-paren-newline: 0
+  curly: 0
+  nonblock-statement-body-position: 0
   object-curly-spacing:
     - error
     - always
