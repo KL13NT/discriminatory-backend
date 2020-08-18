@@ -1,7 +1,7 @@
 /* eslint-disable no-return-await */
 
-const { AuthenticationError } = require('apollo-server-express')
 const Joi = require('@hapi/joi')
+const { AuthenticationError } = require('apollo-server-express')
 
 const Post = require('../models/Post')
 const Reaction = require('../models/Reaction')
@@ -11,7 +11,6 @@ const Comment = require('../models/Comment')
 
 const { enforceVerification } = require('../utils')
 const { ID } = require('../custom-joi')
-
 const {
 	POST_CONTENT_MAX,
 	POST_CONTENT_MIN,
@@ -20,7 +19,6 @@ const {
 	RATE_LIMIT_DUPLICATE,
 	RATE_LIMIT_GENERAL
 } = require('../constants')
-
 const {
 	PermissionError,
 	DuplicateError,
@@ -52,7 +50,11 @@ const validators = {
 			.required()
 	}),
 
-	deleteOrPin: Joi.object({
+	delete: Joi.object({
+		post: ID
+	}),
+
+	pin: Joi.object({
 		post: ID
 	}),
 
@@ -144,7 +146,7 @@ const react = async (_, data, { authenticated, verified }) => {
 const deletePost = async (_, data, ctx) => {
 	enforceVerification(ctx)
 
-	await validators.deleteOrPin.validateAsync(data)
+	await validators.delete.validateAsync(data)
 
 	const post = await Post.findOne({
 		_id: data.post
@@ -166,7 +168,7 @@ const deletePost = async (_, data, ctx) => {
 const pin = async (_, data, ctx) => {
 	enforceVerification(ctx)
 
-	await validators.deleteOrPin.validateAsync(data)
+	await validators.pin.validateAsync(data)
 
 	const post = await Post.findOne({
 		_id: data.post

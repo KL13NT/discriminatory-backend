@@ -1,14 +1,12 @@
 /* eslint-disable no-return-await */
-
 const Joi = require('@hapi/joi')
 
 const User = require('../models/User')
 const Follow = require('../models/Follow')
 
+const { MEMBER_FOLLOW_LIMIT } = require('../constants')
 const { ID } = require('../custom-joi')
 const { enforceVerification } = require('../utils')
-
-const { MEMBER_FOLLOW_LIMIT } = require('../constants')
 const { NotFoundError, AccountLimit } = require('../errors')
 
 const validators = {
