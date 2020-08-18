@@ -32,7 +32,7 @@ async function generateDocs() {
 		return `${await output}\n${data}`.trim()
 	}, await Promise.resolve(''))
 
-	mkdir(outputDir)
+	mkdir(outputDir, { recursive: true })
 		.then(() => {
 			save(types)
 		})
