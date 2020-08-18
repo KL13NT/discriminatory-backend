@@ -1,4 +1,4 @@
-const { model, ObjectId } = require('mongoose')
+const { model, Types } = require('mongoose')
 
 const User = model('User', {
 	displayName: { type: String, required: true },
@@ -7,7 +7,7 @@ const User = model('User', {
 	dateofbirth: { type: Date, required: true },
 	tagline: { type: String, required: false },
 	pinned: { type: String, required: false },
-	_id: { type: String, required: true }
+	_id: { type: Types.ObjectId, required: true }
 })
 
 module.exports = User
