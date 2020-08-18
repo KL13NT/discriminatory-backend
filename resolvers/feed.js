@@ -12,7 +12,7 @@ const Comment = require('../models/Comment')
 
 const { FEED_LIMIT_MAX } = require('../constants')
 const { enforceVerification } = require('../utils')
-const { ID } = require('../custom-joi')
+const { ID } = require('../types.joi.js')
 
 const validators = {
 	feed: Joi.object({

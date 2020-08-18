@@ -10,7 +10,7 @@ const Report = require('../models/Report')
 const Comment = require('../models/Comment')
 
 const { enforceVerification } = require('../utils')
-const { ID } = require('../custom-joi')
+const { ID } = require('../types.joi.js')
 const {
 	POST_CONTENT_MAX,
 	POST_CONTENT_MIN,

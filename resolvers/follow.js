@@ -5,7 +5,7 @@ const User = require('../models/User')
 const Follow = require('../models/Follow')
 
 const { MEMBER_FOLLOW_LIMIT } = require('../constants')
-const { ID } = require('../custom-joi')
+const { ID } = require('../types.joi.js')
 const { enforceVerification } = require('../utils')
 const { NotFoundError, AccountLimit } = require('../errors')
 

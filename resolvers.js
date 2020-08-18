@@ -2,7 +2,6 @@ const profile = require('./resolvers/profile')
 const post = require('./resolvers/post')
 const follow = require('./resolvers/follow')
 const feed = require('./resolvers/feed')
-const nested = require('./resolvers/nested')
 
 module.exports = {
 	Mutation: {
@@ -20,6 +19,5 @@ module.exports = {
 	...profile.nested,
 	...post.nested,
 	...follow.nested,
-	...feed.nested,
-	...nested
+	...feed.nested
 }
