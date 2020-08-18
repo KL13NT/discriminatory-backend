@@ -122,6 +122,5 @@ dist
 data/
 
 .vscode
-docs
 
 *.rdb
