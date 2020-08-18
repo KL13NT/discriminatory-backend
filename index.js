@@ -17,6 +17,7 @@ const {
 const types = readSDL('./types.graphql')
 const queries = readSDL('./queries.graphql')
 const typeDefs = `${types}\n${queries}`
+const redis = require('./redis') // eslint-disable-line
 
 const config = {
 	port: 3000,

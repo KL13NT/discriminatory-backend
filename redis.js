@@ -6,6 +6,7 @@ const client = redis.createClient()
 client.on('error', error => {
 	// eslint-disable-next-line no-console
 	console.error(error)
+	process.exit(1)
 })
 
 const get = promisify(client.get).bind(client)
