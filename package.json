@@ -29,9 +29,11 @@
 		"prettier": "^1.18.2"
 	},
 	"dependencies": {
+		"@google-cloud/storage": "^5.2.0",
 		"@graphql-tools/utils": "^6.0.18",
 		"@hapi/joi": "^17.1.1",
 		"apollo-server-express": "^2.16.1",
+		"cloudinary": "^1.22.0",
 		"cors": "^2.8.5",
 		"dotenv": "^8.2.0",
 		"express": "^4.17.1",

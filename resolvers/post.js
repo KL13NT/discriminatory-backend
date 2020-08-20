@@ -123,7 +123,7 @@ const createPost = async (
 	return post._id
 }
 
-const react = async (_, data, { authenticated, verified }) => {
+const react = async (_, data, { authenticated, decodedToken, verified }) => {
 	enforceVerification({ authenticated, verified })
 
 	await validators.react.validateAsync(data)
@@ -136,7 +136,7 @@ const react = async (_, data, { authenticated, verified }) => {
 		{
 			post: data.post
 		},
-		{ ...data, author: post.author, created: Date.now() },
+		{ ...data, author: decodedToken.uid, created: Date.now() },
 		{ upsert: true, new: true }
 	).exec()
 
@@ -191,33 +191,33 @@ const pin = async (_, data, ctx) => {
 	return post._id
 }
 
-const report = async (_, data, ctx) => {
-	enforceVerification(ctx)
+// const report = async (_, data, ctx) => {
+// 	enforceVerification(ctx)
 
-	await validators.report.validateAsync(data)
+// 	await validators.report.validateAsync(data)
 
-	const post = await Post.findOne({
-		_id: data.post
-	})
+// 	const post = await Post.findOne({
+// 		_id: data.post
+// 	})
 
-	if (!post) return new NotFoundError('[404] Resource not found')
+// 	if (!post) return new NotFoundError('[404] Resource not found')
 
-	if (post.author === ctx.decodedToken.uid) {
-		return new PermissionError('[Permission] You cannot report your own posts')
-	}
+// 	if (post.author === ctx.decodedToken.uid) {
+// 		return new PermissionError('[Permission] You cannot report your own posts')
+// 	}
 
-	if (await Report.findOne({ post: data.post, author: ctx.decodedToken.uid })) {
-		return new DuplicateError('[Duplicate] You already reported this post')
-	}
+// 	if (await Report.findOne({ post: data.post, author: ctx.decodedToken.uid })) {
+// 		return new DuplicateError('[Duplicate] You already reported this post')
+// 	}
 
-	return (
-		await Report.create({
-			post: post._id,
-			author: ctx.decodedToken.uid,
-			reason: data.reason
-		})
-	)._id
-}
+// 	return (
+// 		await Report.create({
+// 			post: post._id,
+// 			author: ctx.decodedToken.uid,
+// 			reason: data.reason
+// 		})
+// 	)._id
+// }
 
 const comment = async (_, data, ctx) => {
 	enforceVerification(ctx)
@@ -246,7 +246,7 @@ const comment = async (_, data, ctx) => {
 			post: post._id,
 			author: ctx.decodedToken.uid,
 			content: data.content,
-			create: Date.now()
+			created: Date.now()
 		})
 	)._id
 }
@@ -257,7 +257,7 @@ module.exports = {
 		delete: deletePost,
 		react,
 		pin,
-		report,
+		// report,
 		comment
 	},
 	queries: {},

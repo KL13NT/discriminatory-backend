@@ -16,7 +16,7 @@ type Mutation {
 	comment(post: ID!, content: String!): ID!
 
 	pin(post: ID!): ID!
-	report(post: ID!, reason: String!): ID!
+	# report(post: ID!, reason: String!): ID!
 
 	# ACTIONS RELATED TO MEMBER-RELATIONS
 	follow(member: ID!): Follow!
@@ -27,4 +27,5 @@ type Query {
 	account: User
 	posts(member: String!, limit: Int!): [Post!]
 	feed(limit: Int!, before: ID): [Post!]!
+	explore(limit: Int!, before: ID): [UnregisteredPost!]!
 }

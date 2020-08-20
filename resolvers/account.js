@@ -13,6 +13,7 @@ const {
 } = require('../constants')
 const { enforceVerification } = require('../utils')
 const { NotFoundError } = require('../errors')
+const { set, get } = require('../redis')
 
 const validators = {
 	updateAccount: Joi.object({
@@ -58,14 +59,44 @@ const updateAccount = async (
 			upsert: true,
 			new: true
 		}
-	)
+	).exec()
 }
 
-const getAccount = async (_, _2, { decodedToken }) => {
+const getAccount = async (_, _2, { decodedToken, authenticated }) => {
 	const user = await firebase.auth().getUser(decodedToken.uid)
-	if (!user) return NotFoundError('A user with this id was not found')
+	if (!user) return new NotFoundError('A user with this id was not found')
 
-	return User.findOne({ _id: decodedToken.uid })
+	const account = await User.findById(decodedToken.uid).exec()
+
+	if (!account) return new NotFoundError('[Not Found]')
+
+	if (!authenticated) return account.toObject()
+
+	const metaname = await get(`AVATARS:${decodedToken.uid}`)
+	if (metaname)
+		return {
+			...(await account.toObject()),
+			avatar: metaname
+		}
+
+	const file = firebase
+		.storage()
+		.bucket()
+		.file(`avatars/${decodedToken.uid}_200x200`)
+
+	if (!(await file.exists())[0]) return account.toObject()
+
+	await file.setMetadata({
+		cacheControl: 'private,max-age=86400'
+	})
+
+	const [metadata] = await file.getMetadata()
+	await set(`AVATARS:${decodedToken.uid}`, metadata.name)
+
+	return {
+		...(await account.toObject()),
+		avatar: metadata.name
+	}
 }
 
 module.exports = {

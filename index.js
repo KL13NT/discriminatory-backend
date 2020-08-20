@@ -2,12 +2,12 @@ const express = require('express')
 const mongoose = require('mongoose')
 const admin = require('firebase-admin')
 const depthLimit = require('graphql-depth-limit')
+const { json } = require('express')
 const { ApolloServer } = require('apollo-server-express')
 
 const firebaseCreds = require('./admin.firebase.json')
 const limitLimit = require('./validation/limitLimit')
 
-const resolvers = require('./resolvers')
 const {
 	readSDL,
 	createApolloContext: context,
@@ -21,11 +21,15 @@ const redis = require('./redis') // eslint-disable-line
 
 const config = {
 	port: 3000,
-	databaseURL: 'https://discriminatory-17437.firebaseio.com',
-	credential: admin.credential.cert(firebaseCreds)
+	databaseURL: process.env.FIREBASE_DB,
+	credential: admin.credential.cert(firebaseCreds),
+	storageBucket: process.env.FIREBASE_BUCKET
 }
 
 admin.initializeApp(config)
+
+// Resolvers depend on admin initialized so keep them here
+const resolvers = require('./resolvers')
 
 const startServer = async () => {
 	const app = express()
@@ -38,6 +42,7 @@ const startServer = async () => {
 		validationRules: [depthLimit(3), limitLimit(20)]
 	})
 
+	app.use(json({ limit: '2mb' }))
 	server.applyMiddleware({ app })
 
 	await mongoose.connect('mongodb://localhost:27017/discriminatory', {

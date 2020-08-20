@@ -1,5 +1,5 @@
 /* eslint-disable no-return-await */
-
+const firebase = require('firebase-admin')
 const Joi = require('@hapi/joi')
 const { Types, isValidObjectId } = require('mongoose')
 const { ValidationError } = require('apollo-server-express')
@@ -13,6 +13,8 @@ const Comment = require('../models/Comment')
 const { FEED_LIMIT_MAX } = require('../constants')
 const { enforceVerification } = require('../utils')
 const { ID } = require('../types.joi.js')
+
+const { set, get } = require('../redis')
 
 const validators = {
 	feed: Joi.object({
@@ -43,7 +45,7 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
 
 	const authorQuery = {
 		author: {
-			$in: follows
+			$in: [...follows, decodedToken.uid]
 		}
 	}
 
@@ -52,9 +54,7 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
 			? authorQuery
 			: { ...authorQuery, _id: { $lte: Types.ObjectId(data.before) } }
 
-	const posts = await Post.find(query)
-		.limit(FEED_LIMIT_MAX)
-		.sort('-created')
+	const posts = await Post.find(query).limit(FEED_LIMIT_MAX)
 
 	return posts
 }
@@ -64,21 +64,37 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
  * @param {object} parent
  */
 
-const author = async parent => User.findOne({ _id: parent.author })
+// TODO: cache authors until the request is finished
+const author = async (parent, data, { decodedToken }) => {
+	const acc = await User.findOne({ _id: parent.author }).exec()
+
+	return {
+		...(await acc.toObject()),
+		avatar: await get(`AVATARS:${acc._id}`)
+	}
+}
 const comments = async ({ _id }) => Comment.find({ post: _id }).limit(10)
-const reactions = async ({ _id }) => {
-	const all = await Reaction.find({ post: _id })
+const reactions = async ({ _id: post }, _, { decodedToken }) => {
+	const upvotes = await Reaction.find({
+		post,
+		reaction: 'UPVOTE'
+	}).countDocuments()
 
-	return all.reduce(
-		(total, { reaction }) => {
-			if (reaction === 'UPVOTE') return { ...total, upvotes: total.upvotes + 1 }
-			if (reaction === 'DOWNVOTE')
-				return { ...total, downvotes: total.downvotes + 1 }
+	const downvotes = await Reaction.find({
+		post,
+		reaction: 'DOWNVOTE'
+	}).countDocuments()
 
-			return total
-		},
-		{ upvotes: 0, downvotes: 0 }
-	)
+	const reaction = await Reaction.findOne({
+		author: decodedToken.uid,
+		post
+	}).exec()
+
+	return {
+		upvotes,
+		downvotes,
+		reaction: reaction ? reaction.reaction : null
+	}
 }
 
 module.exports = {
@@ -91,6 +107,9 @@ module.exports = {
 			author,
 			reactions,
 			comments
+		},
+		Comment: {
+			author
 		}
 	}
 }

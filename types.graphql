@@ -1,22 +1,22 @@
-scalar DATE
 # union ACCESS_LEVEL = ADMIN | SUPPORT | VERIFIED | GENERAL | ANONYMOUS
 # union REACTION = UPVOTE | DOWNVOTE
 
 type User {
-	displayName: String!
+	displayName: String
 	email: String!
 	location: String!
-	dateofbirth: DATE!
+	dateofbirth: String!
 	tagline: String!
-	accessLevel: String!
-	created: DATE!
+	created: String!
 	pinned: ID
+	avatar: String
 	_id: ID!
 }
 
 type ReactionData {
 	upvotes: Int!
 	downvotes: Int!
+	reaction: String
 }
 
 type Post {
@@ -25,21 +25,30 @@ type Post {
 	content: String!
 	reactions: ReactionData!
 	comments: [Comment!]!
-	created: DATE!
+	created: String!
+	_id: ID!
+}
+
+type UnregisteredPost {
+	author: User!
+	location: String!
+	content: String!
+	reactions: ReactionData!
+	created: String!
 	_id: ID!
 }
 
 type Reaction {
 	author: User!
 	reaction: String!
-	created: DATE!
+	created: String!
 	_id: ID!
 }
 
 type Comment {
 	author: User!
 	content: String!
-	created: DATE!
+	created: String!
 	_id: ID!
 }
 
@@ -52,5 +61,5 @@ type Report {
 type Follow {
 	following: ID!
 	author: ID!
-	created: DATE!
+	created: String!
 }

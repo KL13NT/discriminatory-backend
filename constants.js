@@ -25,5 +25,6 @@ module.exports = {
 	FEED_LIMIT_QUERY_PERIOD: 60 * 1000, // time required for cache re-validations
 	FEED_COMMENTS_PER_POST: 10,
 
-	MEMBER_FOLLOW_LIMIT: 100
+	MEMBER_FOLLOW_LIMIT: 100,
+	AVATAR_UPDATE_PERIOD: 24 * 60 * 60 * 1000 // change every 24 hours
 }
