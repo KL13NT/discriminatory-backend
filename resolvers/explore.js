@@ -1,18 +1,19 @@
 /* eslint-disable no-return-await */
-
 const Joi = require('@hapi/joi')
 const { Types, isValidObjectId } = require('mongoose')
 const { ValidationError } = require('apollo-server-express')
 
 const Post = require('../models/Post')
+const Follow = require('../models/Follow')
 const User = require('../models/User')
 const Reaction = require('../models/Reaction')
 
 const { FEED_LIMIT_MAX } = require('../constants')
+const { enforceVerification, getAvatarUrlFromCache } = require('../utils')
 const { ID } = require('../types.joi.js')
 
 const validators = {
-	explore: Joi.object({
+	feed: Joi.object({
 		limit: Joi.number()
 			.min(5)
 			.max(20)
@@ -27,7 +28,7 @@ const validators = {
  */
 
 const explore = async (_, data) => {
-	await validators.explore.validateAsync(data)
+	await validators.feed.validateAsync(data)
 
 	if (data.before !== null && !isValidObjectId(data.before))
 		return ValidationError('[User Input] Before post ID is invalid')
@@ -37,7 +38,7 @@ const explore = async (_, data) => {
 
 	const posts = await Post.find(query)
 		.limit(FEED_LIMIT_MAX)
-		.exec()
+		.sort('-created')
 
 	return posts
 }
@@ -47,25 +48,36 @@ const explore = async (_, data) => {
  * @param {object} parent
  */
 
-// TODO: cache authors until the request is finished
-// TODO: Move logic from feed to here
-const author = async parent => User.findOne({ _id: parent.author })
-const reactions = async ({ _id }) => {
-	const all = await Reaction.find({ post: _id })
-
-	const data = all.reduce(
-		(total, { reaction }) => {
-			if (reaction === 'UPVOTE') return { ...total, upvotes: total.upvotes + 1 }
-			if (reaction === 'DOWNVOTE')
-				return { ...total, downvotes: total.downvotes + 1 }
-
-			return total
-		},
-		{ upvotes: 0, downvotes: 0 }
-	)
+const author = async (parent, _, { decodedToken }) => {
+	const acc = await User.findOne({
+		_id: parent.author
+	}).exec()
 
 	return {
-		...data
+		...(await acc.toObject()),
+		avatar: await getAvatarUrlFromCache(decodedToken.uid)
+	}
+}
+const reactions = async ({ _id: post }, _, { decodedToken }) => {
+	const upvotes = await Reaction.find({
+		post,
+		reaction: 'UPVOTE'
+	}).countDocuments()
+
+	const downvotes = await Reaction.find({
+		post,
+		reaction: 'DOWNVOTE'
+	}).countDocuments()
+
+	const reaction = await Reaction.findOne({
+		author: decodedToken.uid,
+		post
+	}).exec()
+
+	return {
+		upvotes,
+		downvotes,
+		reaction: reaction ? reaction.reaction : null
 	}
 }
 

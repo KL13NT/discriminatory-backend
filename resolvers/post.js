@@ -6,7 +6,7 @@ const { AuthenticationError } = require('apollo-server-express')
 const Post = require('../models/Post')
 const Reaction = require('../models/Reaction')
 const User = require('../models/User')
-const Report = require('../models/Report')
+// const Report = require('../models/Report')
 const Comment = require('../models/Comment')
 
 const { enforceVerification } = require('../utils')
@@ -20,8 +20,8 @@ const {
 	RATE_LIMIT_GENERAL
 } = require('../constants')
 const {
-	PermissionError,
-	DuplicateError,
+	// PermissionError,
+	// DuplicateError,
 	RateLimitError,
 	NotFoundError
 } = require('../errors')
@@ -100,19 +100,19 @@ const createPost = async (
 
 	if (
 		await Post.exists({
-			author: decodedToken.uid
-		}).or([
-			{
-				created: { $gte: Date.now() - RATE_LIMIT_DUPLICATE }, // duplicate in last hour
-				content: data.content
-			},
-			{ created: { $gte: Date.now() - RATE_LIMIT_GENERAL } } // in last minute
-		])
-	) {
+			author: decodedToken.uid,
+			$or: [
+				{
+					created: { $gte: Date.now() - RATE_LIMIT_DUPLICATE }, // duplicate in last hour
+					content: data.content
+				},
+				{ created: { $gte: Date.now() - RATE_LIMIT_GENERAL } } // in last minute
+			]
+		})
+	)
 		return new RateLimitError(
 			'[Rate Limit] You cannot post the same post twice in an hour or post multiple posts in a minute'
 		)
-	}
 
 	const post = await Post.create({
 		...data,

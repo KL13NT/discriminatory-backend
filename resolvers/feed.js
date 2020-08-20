@@ -54,7 +54,9 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
 			? authorQuery
 			: { ...authorQuery, _id: { $lte: Types.ObjectId(data.before) } }
 
-	const posts = await Post.find(query).limit(FEED_LIMIT_MAX)
+	const posts = await Post.find(query)
+		.limit(FEED_LIMIT_MAX)
+		.sort('-created')
 
 	return posts
 }

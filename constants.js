@@ -6,7 +6,7 @@ module.exports = {
 	PROFILE_LOCATION_MAX: 40,
 
 	LOCATION_MAX: 120,
-	LOCATION_MIN: 20,
+	LOCATION_MIN: 5,
 
 	ID_MAX: 160,
 	ID_MIN: 20,
