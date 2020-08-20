@@ -1,5 +1,4 @@
 /* eslint-disable no-return-await */
-const firebase = require('firebase-admin')
 const Joi = require('@hapi/joi')
 const { Types, isValidObjectId } = require('mongoose')
 const { ValidationError } = require('apollo-server-express')
@@ -14,7 +13,7 @@ const { FEED_LIMIT_MAX } = require('../constants')
 const { enforceVerification } = require('../utils')
 const { ID } = require('../types.joi.js')
 
-const { set, get } = require('../redis')
+const { get } = require('../redis')
 
 const validators = {
 	feed: Joi.object({
@@ -65,7 +64,7 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
  */
 
 // TODO: cache authors until the request is finished
-const author = async (parent, data, { decodedToken }) => {
+const author = async parent => {
 	const acc = await User.findOne({ _id: parent.author }).exec()
 
 	return {

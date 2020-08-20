@@ -99,7 +99,7 @@ const createPost = async (
 	await validators.createPost.validateAsync(data)
 
 	if (
-		await Post.findOne({
+		await Post.exists({
 			author: decodedToken.uid
 		}).or([
 			{
@@ -224,14 +224,15 @@ const comment = async (_, data, ctx) => {
 
 	await validators.comment.validateAsync(data)
 
-	const post = await Post.findOne({
-		_id: data.post
-	})
-
-	if (!post) return new NotFoundError('[404] Resource not found')
+	if (
+		!(await Post.exists({
+			_id: data.post
+		}))
+	)
+		return new NotFoundError('[404] Resource not found')
 
 	if (
-		await Comment.findOne({
+		await Comment.exists({
 			author: ctx.decodedToken.uid,
 			created: { $gte: Date.now() - RATE_LIMIT_GENERAL }
 		})
@@ -243,7 +244,7 @@ const comment = async (_, data, ctx) => {
 
 	return (
 		await Comment.create({
-			post: post._id,
+			post: data.post,
 			author: ctx.decodedToken.uid,
 			content: data.content,
 			created: Date.now()

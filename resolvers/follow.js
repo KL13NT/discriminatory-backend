@@ -20,8 +20,8 @@ const unfollow = async (_, data, { decodedToken, authenticated, verified }) => {
 
 	await validators.follow.validateAsync(data)
 
-	const user = User.findOne({ _id: data.member })
-	if (!user) return NotFoundError('[Not Found] User not found')
+	if (!(await User.exists({ _id: data.member })))
+		return NotFoundError('[Not Found] User not found')
 
 	const follow = await Follow.findOne({
 		author: decodedToken.uid,
@@ -46,9 +46,8 @@ const follow = async (_, data, { decodedToken, authenticated, verified }) => {
 			'[Account Limit] You exceeded the maximum number of allowed follows'
 		)
 
-	const user = User.findOne({ _id: data.member })
-
-	if (!user) return NotFoundError('[Not Found] User not found')
+	if (!(await User.exists({ _id: data.member })))
+		return NotFoundError('[Not Found] User not found')
 
 	return Follow.create({
 		author: decodedToken.uid,

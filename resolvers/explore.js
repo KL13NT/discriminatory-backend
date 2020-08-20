@@ -48,6 +48,7 @@ const explore = async (_, data) => {
  */
 
 // TODO: cache authors until the request is finished
+// TODO: Move logic from feed to here
 const author = async parent => User.findOne({ _id: parent.author })
 const reactions = async ({ _id }) => {
 	const all = await Reaction.find({ post: _id })
