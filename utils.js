@@ -77,7 +77,7 @@ const createApolloContext = async ({ req }) => {
 const formatError = err => {
 	const error = err.originalError || err
 	// eslint-disable-next-line no-console
-	console.log(error.message, error.code)
+	console.log(error)
 
 	if (error instanceof ValidationError) {
 		return new UserInputError(`[Validation] ${error.message}`, {
@@ -99,6 +99,40 @@ const readSDL = path =>
 		encoding: 'utf-8'
 	})
 
+/**
+ * Controls the cache of image urls
+ * @param {String} UID
+ */
+const getAvatarUrlFromCache = async uid => {
+	const cached = String(await get(`AVATAR_URL:${uid}`))
+	const created = Number(await get(`AVATAR_CACHED:${uid}`))
+
+	if (cached !== 'null' && created > Date.now() - 86400 * 1000) return cached
+
+	// TODO: move caching logic to updateAccount instead
+
+	const file = admin
+		.storage()
+		.bucket()
+		.file(`avatars/${uid}_200x200`)
+
+	if (!(await file.exists())[0]) return null
+
+	await file.setMetadata({
+		cacheControl: 'private,max-age=86400'
+	})
+
+	const [url] = await file.getSignedUrl({
+		action: 'read',
+		expires: Date.now() + 86400 * 1000
+	})
+
+	set(`AVATAR_URL:${uid}`, url)
+	set(`AVATAR_CACHED:${uid}`, Date.now())
+
+	return url
+}
+
 module.exports = {
 	getUser,
 	verifyToken,
@@ -106,5 +140,6 @@ module.exports = {
 	enforceVerification,
 	readSDL,
 	createApolloContext,
-	formatError
+	formatError,
+	getAvatarUrlFromCache
 }

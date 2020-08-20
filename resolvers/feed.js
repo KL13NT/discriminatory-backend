@@ -3,6 +3,7 @@ const Joi = require('@hapi/joi')
 const { Types, isValidObjectId } = require('mongoose')
 const { ValidationError } = require('apollo-server-express')
 
+const { storage } = require('firebase-admin')
 const Post = require('../models/Post')
 const Follow = require('../models/Follow')
 const User = require('../models/User')
@@ -10,10 +11,10 @@ const Reaction = require('../models/Reaction')
 const Comment = require('../models/Comment')
 
 const { FEED_LIMIT_MAX } = require('../constants')
-const { enforceVerification } = require('../utils')
+const { enforceVerification, getAvatarUrlFromCache } = require('../utils')
 const { ID } = require('../types.joi.js')
 
-const { get } = require('../redis')
+const { get, set } = require('../redis')
 
 const validators = {
 	feed: Joi.object({
@@ -64,12 +65,14 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
  */
 
 // TODO: cache authors until the request is finished
-const author = async parent => {
-	const acc = await User.findOne({ _id: parent.author }).exec()
+const author = async (parent, _, { decodedToken }) => {
+	const acc = await User.findOne({
+		_id: parent.author
+	}).exec()
 
 	return {
 		...(await acc.toObject()),
-		avatar: await get(`AVATARS:${acc._id}`)
+		avatar: await getAvatarUrlFromCache(decodedToken.uid)
 	}
 }
 const comments = async ({ _id }) => Comment.find({ post: _id }).limit(10)

@@ -11,7 +11,7 @@ const {
 	PROFILE_LOCATION_MAX,
 	PROFILE_LOCATION_MIN
 } = require('../constants')
-const { enforceVerification } = require('../utils')
+const { enforceVerification, getAvatarUrlFromCache } = require('../utils')
 const { NotFoundError } = require('../errors')
 const { set, get } = require('../redis')
 
@@ -72,30 +72,14 @@ const getAccount = async (_, _2, { decodedToken, authenticated }) => {
 
 	if (!authenticated) return account.toObject()
 
-	const metaname = await get(`AVATARS:${decodedToken.uid}`)
-	if (metaname)
-		return {
-			...(await account.toObject()),
-			avatar: metaname
-		}
+	const url = await getAvatarUrlFromCache(decodedToken.uid)
 
-	const file = firebase
-		.storage()
-		.bucket()
-		.file(`avatars/${decodedToken.uid}_200x200`)
-
-	if (!(await file.exists())[0]) return account.toObject()
-
-	await file.setMetadata({
-		cacheControl: 'private,max-age=86400'
-	})
-
-	const [metadata] = await file.getMetadata()
-	await set(`AVATARS:${decodedToken.uid}`, metadata.name)
+	// TODO: move caching logic to updateAccount instead
+	if (!url) return account.toObject()
 
 	return {
 		...(await account.toObject()),
-		avatar: metadata.name
+		avatar: url
 	}
 }
 
