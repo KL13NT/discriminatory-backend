@@ -1,4 +1,4 @@
-const { model } = require('mongoose')
+const { model, Types } = require('mongoose')
 
 const Post = model('Post', {
 	content: { type: String, required: true },

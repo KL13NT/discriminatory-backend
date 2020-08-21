@@ -3,12 +3,14 @@ const account = require('./resolvers/account')
 const post = require('./resolvers/post')
 const follow = require('./resolvers/follow')
 const feed = require('./resolvers/feed')
+const explore = require('./resolvers/explore')
 
 module.exports = {
 	Mutation: {
 		...profile.mutations,
 		...follow.mutations,
 		...feed.mutations,
+		...explore.mutations,
 		...post.mutations,
 		...account.mutations
 	},
@@ -16,6 +18,7 @@ module.exports = {
 		...profile.queries,
 		...follow.queries,
 		...feed.queries,
+		...explore.queries,
 		...post.queries,
 		...account.queries
 	},
@@ -23,5 +26,6 @@ module.exports = {
 	...post.nested,
 	...follow.nested,
 	...feed.nested,
+	...explore.nested,
 	...account.nested
 }

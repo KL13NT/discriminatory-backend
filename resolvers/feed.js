@@ -3,7 +3,6 @@ const Joi = require('@hapi/joi')
 const { Types, isValidObjectId } = require('mongoose')
 const { ValidationError } = require('apollo-server-express')
 
-const { storage } = require('firebase-admin')
 const Post = require('../models/Post')
 const Follow = require('../models/Follow')
 const User = require('../models/User')
@@ -14,15 +13,8 @@ const { FEED_LIMIT_MAX } = require('../constants')
 const { enforceVerification, getAvatarUrlFromCache } = require('../utils')
 const { ID } = require('../types.joi.js')
 
-const { get, set } = require('../redis')
-
 const validators = {
 	feed: Joi.object({
-		limit: Joi.number()
-			.min(5)
-			.max(20)
-			.required(),
-
 		before: ID.allow(null)
 	})
 }
@@ -67,17 +59,28 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
  */
 
 // TODO: cache authors until the request is finished
-const author = async (parent, _, { decodedToken }) => {
-	const acc = await User.findOne({
-		_id: parent.author
-	}).exec()
+const authorsCache = {} // TODO: replace this with actual caching backed by Redis for instance
+const author = async parent => {
+	const acc =
+		authorsCache[parent.author] ||
+		(await (
+			await User.findOne({
+				_id: parent.author
+			}).exec()
+		).toObject())
+
+	authorsCache[parent.author] = acc
 
 	return {
-		...(await acc.toObject()),
-		avatar: await getAvatarUrlFromCache(decodedToken.uid)
+		...acc,
+		avatar: await getAvatarUrlFromCache(acc._id)
 	}
 }
-const comments = async ({ _id }) => Comment.find({ post: _id }).limit(10)
+
+const comments = async ({ _id }) =>
+	Comment.find({ post: _id })
+		.limit(10)
+		.sort('-created')
 const reactions = async ({ _id: post }, _, { decodedToken }) => {
 	const upvotes = await Reaction.find({
 		post,
@@ -89,10 +92,12 @@ const reactions = async ({ _id: post }, _, { decodedToken }) => {
 		reaction: 'DOWNVOTE'
 	}).countDocuments()
 
-	const reaction = await Reaction.findOne({
-		author: decodedToken.uid,
-		post
-	}).exec()
+	const reaction = decodedToken
+		? await Reaction.findOne({
+				author: decodedToken.uid,
+				post
+		  }).exec()
+		: null
 
 	return {
 		upvotes,
