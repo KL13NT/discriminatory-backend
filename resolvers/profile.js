@@ -5,15 +5,22 @@
 const Joi = require('@hapi/joi')
 const { ID } = require('../types.joi')
 
-const { enforceVerification } = require('../utils')
 const User = require('../models/User')
-const { NotFoundError } = require('../errors')
 const Post = require('../models/Post')
+const Follow = require('../models/Follow')
+
+const { NotFoundError } = require('../errors')
+const { enforceVerification, getAvatarUrlFromCache } = require('../utils')
+
+const { nested } = require('./feed')
 
 const validators = {
 	profile: Joi.object({
-		member: ID.required(),
-		before: ID
+		member: Joi.string()
+			.trim()
+			.min(1)
+			.required(),
+		before: ID.allow(null)
 	})
 }
 
@@ -26,6 +33,11 @@ const profile = async (_, data, ctx) => {
 
 	if (!user) return NotFoundError('[Not Found] This account does not exist')
 
+	const following = await Follow.findOne({
+		author: ctx.decodedToken.uid,
+		following: data.member
+	}).exec()
+
 	const pinned = user.pinned
 		? await Post.findOne({ _id: user.pinned }).exec()
 		: null
@@ -35,17 +47,24 @@ const profile = async (_, data, ctx) => {
 	if (pinned) posts.unshift(pinned)
 
 	return {
-		user,
+		user: {
+			...(await user.toObject()),
+			avatar: await getAvatarUrlFromCache(user._id)
+		},
+		following: Boolean(following),
 		posts
 	}
 }
-
-const { nested } = require('./feed')
 
 module.exports = {
 	mutations: {},
 	queries: {
 		profile
 	},
-	nested
+	nested: {
+		ProfilePost: {
+			comments: nested.Post.comments,
+			reactions: nested.Post.reactions
+		}
+	}
 }

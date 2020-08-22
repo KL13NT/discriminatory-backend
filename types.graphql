@@ -15,13 +15,23 @@ type User {
 
 type Profile {
 	user: User!
-	posts(before: ID): [Post!]!
+	following: Boolean!
+	posts: [ProfilePost!]!
 }
 
 type ReactionData {
 	upvotes: Int!
 	downvotes: Int!
 	reaction: String
+}
+
+type ProfilePost {
+	location: String!
+	content: String!
+	reactions: ReactionData!
+	comments: [Comment!]!
+	created: String!
+	_id: ID!
 }
 
 type Post {

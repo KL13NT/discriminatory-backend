@@ -25,7 +25,7 @@ type Mutation {
 
 type Query {
 	account: User
-	profile(member: String!): Profile
+	profile(member: String!, before: ID): Profile
 	posts(member: String!, limit: Int!): [Post!]
 	feed(before: ID): [Post!]!
 	explore(before: ID): [Post!]!

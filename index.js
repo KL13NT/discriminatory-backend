@@ -39,7 +39,7 @@ const startServer = async () => {
 		resolvers,
 		context,
 		formatError,
-		validationRules: [depthLimit(3), limitLimit(20)]
+		validationRules: [depthLimit(5), limitLimit(20)]
 	})
 
 	app.use(json({ limit: '2mb' }))
