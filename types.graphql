@@ -1,21 +1,39 @@
 # union ACCESS_LEVEL = ADMIN | SUPPORT | VERIFIED | GENERAL | ANONYMOUS
 # union REACTION = UPVOTE | DOWNVOTE
+scalar Long
+
+type Badge {
+	name: String!
+	description: String!
+}
+
+type SearchResults {
+	locations: [Location!]!
+}
+
+type Location {
+	location: String!
+	reputation: Int!
+}
 
 type User {
 	displayName: String
 	email: String!
 	location: String!
-	dateofbirth: String!
+	dateofbirth: Long!
 	tagline: String!
-	created: String!
+	created: Long!
 	pinned: ID
+	verified: Boolean
 	avatar: String
+	badges: [Badge!]
 	_id: ID!
 }
 
 type Profile {
 	user: User!
-	following: Boolean!
+	postCount: Int
+	following: Boolean
 	posts: [ProfilePost!]!
 }
 
@@ -28,6 +46,7 @@ type ReactionData {
 type ProfilePost {
 	location: String!
 	content: String!
+	pinned: Boolean
 	reactions: ReactionData!
 	comments: [Comment!]!
 	created: String!
@@ -38,6 +57,7 @@ type Post {
 	author: User!
 	location: String!
 	content: String!
+	pinned: Boolean
 	reactions: ReactionData!
 	comments: [Comment!]!
 	created: String!
@@ -71,10 +91,12 @@ type Report {
 	post: ID!
 	reason: String!
 	author: User
+	_id: ID!
 }
 
 type Follow {
 	following: ID!
 	author: ID!
 	created: String!
+	_id: ID!
 }

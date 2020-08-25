@@ -10,7 +10,11 @@ const Reaction = require('../models/Reaction')
 const Comment = require('../models/Comment')
 
 const { FEED_LIMIT_MAX } = require('../constants')
-const { enforceVerification, getAvatarUrlFromCache } = require('../utils')
+const {
+	enforceVerification,
+	getAvatarUrlFromCache,
+	getUser
+} = require('../utils')
 const { ID } = require('../types.joi.js')
 
 const validators = {
@@ -31,9 +35,11 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
 	if (data.before !== null && !isValidObjectId(data.before))
 		return ValidationError('[User Input] Before post ID is invalid')
 
-	const follows = (await Follow.find({ author: decodedToken.uid })).map(
-		follow => follow.following
-	)
+	const follows = (
+		await Follow.find({ author: decodedToken.uid })
+			.lean()
+			.exec()
+	).map(follow => follow.following)
 
 	const authorQuery = {
 		author: {
@@ -44,13 +50,13 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
 	const query =
 		data.before === null
 			? authorQuery
-			: { ...authorQuery, _id: { $lte: Types.ObjectId(data.before) } }
+			: { ...authorQuery, _id: { $lt: data.before } }
 
-	const posts = await Post.find(query)
+	return Post.find(query)
+		.lean()
 		.limit(FEED_LIMIT_MAX)
-		.sort('-created')
-
-	return posts
+		.sort('-_id')
+		.exec()
 }
 
 /**
@@ -59,44 +65,59 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
  */
 
 // TODO: cache authors until the request is finished
-const authorsCache = {} // TODO: replace this with actual caching backed by Redis for instance
+process.authorsCache = {} // TODO: replace this with actual caching backed by Redis for instance
+process.usersCache = {} // TODO: replace this with actual caching backed by Redis for instance
 const author = async parent => {
 	const acc =
-		authorsCache[parent.author] ||
-		(await (
-			await User.findOne({
-				_id: parent.author
-			}).exec()
-		).toObject())
+		process.authorsCache[parent.author] ||
+		(await User.findOne({
+			_id: parent.author
+		})
+			.lean()
+			.exec())
 
-	authorsCache[parent.author] = acc
+	const user = process.usersCache[acc._id] || (await getUser(acc._id))
+
+	process.usersCache[acc._id] = user
 
 	return {
 		...acc,
-		avatar: await getAvatarUrlFromCache(acc._id)
+		avatar: await getAvatarUrlFromCache(acc._id),
+		verified: user.emailVerified
 	}
 }
 
 const comments = async ({ _id }) =>
 	Comment.find({ post: _id })
 		.limit(10)
-		.sort('-created')
+		.lean()
+		.sort('-_id')
+		.exec()
+
 const reactions = async ({ _id: post }, _, { decodedToken }) => {
 	const upvotes = await Reaction.find({
 		post,
 		reaction: 'UPVOTE'
-	}).countDocuments()
+	})
+		.countDocuments()
+		.lean()
+		.exec()
 
 	const downvotes = await Reaction.find({
 		post,
 		reaction: 'DOWNVOTE'
-	}).countDocuments()
+	})
+		.countDocuments()
+		.lean()
+		.exec()
 
 	const reaction = decodedToken
 		? await Reaction.findOne({
 				author: decodedToken.uid,
 				post
-		  }).exec()
+		  })
+				.lean()
+				.exec()
 		: null
 
 	return {

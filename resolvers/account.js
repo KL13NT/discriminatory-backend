@@ -18,14 +18,9 @@ const { set, get } = require('../redis')
 const validators = {
 	updateAccount: Joi.object({
 		displayName: Joi.string()
-			.pattern(/^[a-zA-Z ]+$/)
 			.trim()
 			.min(DISPLAYNAME_MIN)
 			.max(DISPLAYNAME_MAX)
-			.required(),
-
-		dateofbirth: Joi.date()
-			.max(new Date(new Date() - 409968000000)) // 13 years old
 			.required(),
 
 		location: Joi.string()
@@ -35,11 +30,7 @@ const validators = {
 
 		tagline: Joi.string()
 			.min(TAGLINE_MIN)
-			.max(TAGLINE_MAX),
-
-		email: Joi.string()
-			.email()
-			.required()
+			.max(TAGLINE_MAX)
 	})
 }
 
@@ -54,32 +45,37 @@ const updateAccount = async (
 
 	return User.findOneAndUpdate(
 		{ _id: decodedToken.uid },
-		{ ...data },
+		{ ...data, email: decodedToken.email },
 		{
 			upsert: true,
 			new: true
 		}
-	).exec()
+	)
+		.lean()
+		.exec()
 }
 
-const getAccount = async (_, _2, { decodedToken, authenticated }) => {
+const getAccount = async (_, _2, { decodedToken, authenticated, verified }) => {
 	const user = await firebase.auth().getUser(decodedToken.uid)
 	if (!user) return new NotFoundError('A user with this id was not found')
 
-	const account = await User.findById(decodedToken.uid).exec()
+	const account = await User.findById(decodedToken.uid)
+		.lean()
+		.exec()
 
 	if (!account) return new NotFoundError('[Not Found]')
 
-	if (!authenticated) return account.toObject()
+	if (!authenticated) return account
 
 	const url = await getAvatarUrlFromCache(decodedToken.uid)
 
 	// TODO: move caching logic to updateAccount instead
-	if (!url) return account.toObject()
+	if (!url) return account
 
 	return {
-		...(await account.toObject()),
-		avatar: url
+		...account,
+		avatar: url,
+		verified
 	}
 }
 

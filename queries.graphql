@@ -1,12 +1,6 @@
 type Mutation {
 	# ACTIONS RELATED TO MEMBER ACCOUNTS
-	account(
-		displayName: String!
-		email: String!
-		dateofbirth: String!
-		location: String!
-		tagline: String!
-	): User!
+	account(displayName: String!, location: String!, tagline: String!): User!
 
 	# ACTIONS RELATED TO POSTS
 	post(content: String!, location: String!): ID!
@@ -26,7 +20,8 @@ type Mutation {
 type Query {
 	account: User
 	profile(member: String!, before: ID): Profile
-	posts(member: String!, limit: Int!): [Post!]
+	discriminators(before: ID): [Post!]
 	feed(before: ID): [Post!]!
+	search(query: String!, before: ID): [Location!]!
 	explore(before: ID): [Post!]!
 }

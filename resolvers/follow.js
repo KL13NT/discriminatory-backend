@@ -1,6 +1,7 @@
 /* eslint-disable no-return-await */
 const Joi = require('@hapi/joi')
 
+const { isValidObjectId } = require('mongoose')
 const User = require('../models/User')
 const Follow = require('../models/Follow')
 
@@ -11,7 +12,10 @@ const { NotFoundError, AccountLimit } = require('../errors')
 
 const validators = {
 	follow: Joi.object({
-		member: ID
+		member: Joi.string()
+			.min(1)
+			.max(128)
+			.required()
 	})
 }
 
@@ -21,15 +25,15 @@ const unfollow = async (_, data, { decodedToken, authenticated, verified }) => {
 	await validators.follow.validateAsync(data)
 
 	if (!(await User.exists({ _id: data.member })))
-		return NotFoundError('[Not Found] User not found')
+		return new NotFoundError('[Not Found] User not found')
 
 	const follow = await Follow.findOne({
 		author: decodedToken.uid,
 		following: data.member
-	})
+	}).exec()
 
 	if (!follow)
-		return NotFoundError("[Not Found] You're not following this member")
+		return new NotFoundError("[Not Found] You're not following this member")
 
 	return follow.deleteOne()
 }
@@ -39,7 +43,10 @@ const follow = async (_, data, { decodedToken, authenticated, verified }) => {
 
 	await validators.follow.validateAsync(data)
 
-	const count = await Follow.find({ author: decodedToken.uid }).countDocuments()
+	const count = await Follow.find({ author: decodedToken.uid })
+		.countDocuments()
+		.lean()
+		.exec()
 
 	if (count > MEMBER_FOLLOW_LIMIT)
 		return new AccountLimit(
@@ -47,7 +54,7 @@ const follow = async (_, data, { decodedToken, authenticated, verified }) => {
 		)
 
 	if (!(await User.exists({ _id: data.member })))
-		return NotFoundError('[Not Found] User not found')
+		return new NotFoundError('[Not Found] User not found')
 
 	return Follow.create({
 		author: decodedToken.uid,

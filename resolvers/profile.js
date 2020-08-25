@@ -3,6 +3,7 @@
  */
 
 const Joi = require('@hapi/joi')
+const { Types } = require('mongoose')
 const { ID } = require('../types.joi')
 
 const User = require('../models/User')
@@ -13,6 +14,7 @@ const { NotFoundError } = require('../errors')
 const { enforceVerification, getAvatarUrlFromCache } = require('../utils')
 
 const { nested } = require('./feed')
+const { FEED_LIMIT_MAX } = require('../constants')
 
 const validators = {
 	profile: Joi.object({
@@ -24,34 +26,88 @@ const validators = {
 	})
 }
 
+// REFACTORME: MOVE THIS QUERY TO TWO SEPARATE< ONE FOR DATA< ONE FOR POSTS
 const profile = async (_, data, ctx) => {
 	enforceVerification(ctx)
 
 	await validators.profile.validateAsync(data)
 
-	const user = await User.findOne({ _id: data.member }).exec()
+	const user = await User.findOne({ _id: data.member })
+		.lean()
+		.exec()
 
-	if (!user) return NotFoundError('[Not Found] This account does not exist')
+	if (!user) return new NotFoundError('[Not Found] This account does not exist')
 
 	const following = await Follow.findOne({
 		author: ctx.decodedToken.uid,
 		following: data.member
-	}).exec()
+	})
+		.lean()
+		.exec()
 
-	const pinned = user.pinned
-		? await Post.findOne({ _id: user.pinned }).exec()
-		: null
+	const query =
+		data.before === null
+			? { author: user._id }
+			: {
+					_id: { $lt: data.before },
+					author: user._id
+			  }
 
-	const posts = await Post.find({ author: user._id }).exec()
+	const pinnedQuery = { author: user._id, pinned: true }
 
-	if (pinned) posts.unshift(pinned)
+	if (!data.before) {
+		const [posts, pinned, postCount] = await Promise.all([
+			Post.find(query, { pinned: 0 })
+				.limit(FEED_LIMIT_MAX)
+				.sort('-_id')
+				.lean()
+				.exec(),
+
+			Post.findOne(pinnedQuery)
+				.lean()
+				.exec(),
+
+			Post.find({ author: user._id })
+				.countDocuments()
+				.exec()
+		])
+
+		let final = posts
+
+		if (pinned) {
+			final = [
+				pinned,
+				...posts.filter(post => String(post._id) !== String(pinned._id))
+			]
+		}
+
+		return {
+			user: {
+				...user,
+				avatar: await getAvatarUrlFromCache(user._id),
+				verified: ctx.verified
+			},
+			following: Boolean(following),
+			posts: final,
+			postCount
+		}
+	}
+	// FIXME: doesn't return proper before
+
+	const [posts] = await Promise.all([
+		Post.find(query, { pinned: 0 })
+			.limit(FEED_LIMIT_MAX)
+			.sort('-_id')
+			.lean()
+			.exec()
+	])
 
 	return {
 		user: {
-			...(await user.toObject()),
-			avatar: await getAvatarUrlFromCache(user._id)
+			...user,
+			avatar: await getAvatarUrlFromCache(user._id),
+			verified: ctx.verified
 		},
-		following: Boolean(following),
 		posts
 	}
 }

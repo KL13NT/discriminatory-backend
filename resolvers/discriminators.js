@@ -27,10 +27,12 @@ const explore = async (_, data) => {
 	const query =
 		data.before === null ? {} : { _id: { $lt: Types.ObjectId(data.before) } }
 
-	return Post.find(query)
+	const posts = await Post.find(query)
 		.limit(FEED_LIMIT_MAX)
 		.lean()
-		.sort('-_id')
+		.sort('-created')
+
+	return posts
 }
 
 const { nested } = require('./feed')

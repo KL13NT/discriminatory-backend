@@ -117,7 +117,8 @@ const createPost = async (
 	const post = await Post.create({
 		...data,
 		created: Date.now(),
-		author: decodedToken.uid
+		author: decodedToken.uid,
+		pinned: false
 	})
 
 	return post._id
@@ -129,6 +130,8 @@ const react = async (_, data, { authenticated, decodedToken, verified }) => {
 	await validators.react.validateAsync(data)
 
 	const post = await Post.findOne({ _id: data.post })
+		.lean()
+		.exec()
 
 	if (!post) return new NotFoundError('[404] Resource not found', 'NOT_FOUND')
 
@@ -138,7 +141,9 @@ const react = async (_, data, { authenticated, decodedToken, verified }) => {
 		},
 		{ ...data, author: decodedToken.uid, created: Date.now() },
 		{ upsert: true, new: true }
-	).exec()
+	)
+		.lean()
+		.exec()
 
 	return reaction
 }
@@ -150,7 +155,7 @@ const deletePost = async (_, data, ctx) => {
 
 	const post = await Post.findOne({
 		_id: data.post
-	})
+	}).exec()
 
 	if (!post) return new NotFoundError('[404] Resource not found', 'NOT_FOUND')
 
@@ -171,8 +176,9 @@ const pin = async (_, data, ctx) => {
 	await validators.pin.validateAsync(data)
 
 	const post = await Post.findOne({
+		author: ctx.decodedToken.uid,
 		_id: data.post
-	})
+	}).exec()
 
 	if (!post) return new NotFoundError('[404] Resource not found', 'NOT_FOUND')
 
@@ -182,11 +188,17 @@ const pin = async (_, data, ctx) => {
 		)
 	}
 
-	await User.findOneAndUpdate(
-		{ _id: ctx.decodedToken.uid },
-		{ pinned: post._id },
-		{ new: true }
-	)
+	const pinned = await Post.findOne({
+		author: ctx.decodedToken.uid,
+		pinned: true
+	})
+		.lean()
+		.exec()
+
+	await Promise.all([
+		post.updateOne({ pinned: true }),
+		pinned ? pinned.updateOne({ pinned: false }) : null
+	])
 
 	return post._id
 }
@@ -252,6 +264,27 @@ const comment = async (_, data, ctx) => {
 	)._id
 }
 
+const { nested } = require('./feed')
+
+const getPosts = async (_, data, ctx) => {
+	enforceVerification(ctx)
+
+	await validators.profile.validateAsync(data)
+
+	const user = await User.findOne({ _id: data.member })
+		.lean()
+		.exec()
+
+	if (!user) return new NotFoundError('[Not Found] This account does not exist')
+
+	const query = { author: user._id }
+	const beforeQuery = {
+		_id: { $lt: data.before },
+		author: user._id
+	}
+	const pinnedQuery = { author: user._id, pinned: true }
+}
+
 module.exports = {
 	mutations: {
 		post: createPost,
@@ -261,6 +294,8 @@ module.exports = {
 		// report,
 		comment
 	},
-	queries: {},
+	queries: {
+		// posts: getPosts
+	},
 	nested: {}
 }

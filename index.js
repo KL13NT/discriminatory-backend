@@ -5,6 +5,8 @@ const depthLimit = require('graphql-depth-limit')
 const { json } = require('express')
 const { ApolloServer } = require('apollo-server-express')
 
+const { LongResolver } = require('graphql-scalars')
+
 const firebaseCreds = require('./admin.firebase.json')
 const limitLimit = require('./validation/limitLimit')
 
@@ -36,9 +38,15 @@ const startServer = async () => {
 
 	const server = new ApolloServer({
 		typeDefs,
-		resolvers,
+		resolvers: {
+			...resolvers,
+			Long: LongResolver
+		},
 		context,
 		formatError,
+		persistedQueries: {
+			cache: {}
+		},
 		validationRules: [depthLimit(5), limitLimit(20)]
 	})
 

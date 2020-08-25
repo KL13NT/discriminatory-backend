@@ -6,6 +6,7 @@
 	"main": "index.js",
 	"scripts": {
 		"develop": "yarn nodemon -r dotenv/config index.js",
+		"inspect": "node --inspect -r dotenv/config index.js",
 		"deploy": "npm install && sudo pm2 start index.js && sudo pm2 startup",
 		"test": "jest --colors --expand --logHeapUsage --config jest.config.js --verbose --coverage --passWithNoTests",
 		"lint": "eslint --ext .js ./ --config .eslintrc.yml --fix",
@@ -42,6 +43,7 @@
 		"firebase-admin": "^9.0.0",
 		"graphql": "^15.3.0",
 		"graphql-depth-limit": "^1.1.0",
+		"graphql-scalars": "^1.2.6",
 		"graphql-tag": "^2.11.0",
 		"jsonwebtoken": "^8.5.1",
 		"mongoose": "^5.9.27",
