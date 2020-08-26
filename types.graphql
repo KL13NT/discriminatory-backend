@@ -14,6 +14,7 @@ type SearchResults {
 type Location {
 	location: String!
 	reputation: Int!
+	_id: ID!
 }
 
 type User {
