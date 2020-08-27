@@ -19,7 +19,8 @@ module.exports = {
 
 	RATE_LIMIT_DUPLICATE: 3600000, // 1 hour
 	RATE_LIMIT_GENERAL: 60 * 1000, // 1 minute
-	RATE_LIMIT_BASE: 200, // 1 second
+	RATE_LIMIT_BASE: 200, // 5 requests / second
+	RATE_LIMIT_REQ: 60, // 5 requests / minute
 
 	FEED_LIMIT_MAX: 20, // query `limit`
 	FEED_LIMIT_QUERY_PERIOD: 60 * 1000, // time required for cache re-validations

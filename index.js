@@ -4,17 +4,19 @@ const admin = require('firebase-admin')
 const depthLimit = require('graphql-depth-limit')
 const { json } = require('express')
 const { ApolloServer } = require('apollo-server-express')
-
 const { LongResolver } = require('graphql-scalars')
 
 const firebaseCreds = require('./admin.firebase.json')
-const limitLimit = require('./validation/limitLimit')
+
+const { RateLimitError } = require('./errors')
 
 const {
 	readSDL,
-	createApolloContext: context,
-	formatError
+	formatError,
+	createApolloContext: context
 } = require('./utils')
+const { set, get, incr, expire } = require('./redis')
+const { RATE_LIMIT_REQ } = require('./constants')
 
 const types = readSDL('./types.graphql')
 const queries = readSDL('./queries.graphql')
@@ -47,7 +49,32 @@ const startServer = async () => {
 		persistedQueries: {
 			cache: {}
 		},
-		validationRules: [depthLimit(5), limitLimit(20)]
+		validationRules: [depthLimit(5)]
+	})
+
+	app.use(async (req, res, next) => {
+		const forwarded = req.headers['x-forwarded-for']
+		const ip =
+			(Array.isArray(forwarded) ? forwarded.shift() : forwarded || '')
+				.split(',')
+				.pop()
+				.trim() ||
+			req.connection.remoteAddress ||
+			req.socket.remoteAddress ||
+			req.connection.socket.remoteAddress
+
+		const last = await get(`REQ:${ip}`)
+		if (last) {
+			await incr(`REQ:${ip}`)
+
+			if (Number(last) > RATE_LIMIT_REQ)
+				return new RateLimitError('[Rate Limit] Whoa, slow down')
+		} else {
+			await set(`REQ:${ip}`, 1)
+			await expire(`REQ:${ip}`, 60)
+		}
+
+		next()
 	})
 
 	app.use(json({ limit: '2mb' }))
