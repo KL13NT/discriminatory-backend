@@ -6,8 +6,9 @@ const { AuthenticationError } = require('apollo-server-express')
 const Post = require('../models/Post')
 const Reaction = require('../models/Reaction')
 const User = require('../models/User')
-// const Report = require('../models/Report')
+const Location = require('../models/Location')
 const Comment = require('../models/Comment')
+// const Report = require('../models/Report')
 
 const { enforceVerification } = require('../utils')
 const { ID } = require('../types.joi.js')
@@ -114,11 +115,20 @@ const createPost = async (
 			'[Rate Limit] You cannot post the same post twice in an hour or post multiple posts in a minute'
 		)
 
+	const location = await Location.findOneAndUpdate(
+		{
+			location: data.location
+		},
+		{ $inc: { reputation: 1 } },
+		{ upsert: true, new: true }
+	).exec()
+
 	const post = await Post.create({
 		...data,
 		created: Date.now(),
 		author: decodedToken.uid,
-		pinned: false
+		pinned: false,
+		location: location._id
 	})
 
 	return post._id
@@ -262,27 +272,6 @@ const comment = async (_, data, ctx) => {
 			created: Date.now()
 		})
 	)._id
-}
-
-const { nested } = require('./feed')
-
-const getPosts = async (_, data, ctx) => {
-	enforceVerification(ctx)
-
-	await validators.profile.validateAsync(data)
-
-	const user = await User.findOne({ _id: data.member })
-		.lean()
-		.exec()
-
-	if (!user) return new NotFoundError('[Not Found] This account does not exist')
-
-	const query = { author: user._id }
-	const beforeQuery = {
-		_id: { $lt: data.before },
-		author: user._id
-	}
-	const pinnedQuery = { author: user._id, pinned: true }
 }
 
 module.exports = {

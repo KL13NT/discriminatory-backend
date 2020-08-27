@@ -16,6 +16,7 @@ const {
 	getUser
 } = require('../utils')
 const { ID } = require('../types.joi.js')
+const Location = require('../models/Location')
 
 const validators = {
 	feed: Joi.object({
@@ -87,6 +88,11 @@ const author = async parent => {
 	}
 }
 
+const location = async ({ location }) =>
+	Location.findOne({ _id: location })
+		.lean()
+		.exec()
+
 const comments = async ({ _id }) =>
 	Comment.find({ post: _id })
 		.limit(10)
@@ -136,7 +142,8 @@ module.exports = {
 		Post: {
 			author,
 			reactions,
-			comments
+			comments,
+			location
 		},
 		Comment: {
 			author

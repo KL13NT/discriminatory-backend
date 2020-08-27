@@ -22,6 +22,6 @@ type Query {
 	profile(member: String!, before: ID): Profile
 	discriminators(before: ID): [Post!]
 	feed(before: ID): [Post!]!
-	search(query: String!, before: ID): [Location!]!
+	search(query: String!): [Post!]!
 	explore(before: ID): [Post!]!
 }

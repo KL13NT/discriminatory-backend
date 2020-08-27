@@ -45,7 +45,7 @@ type ReactionData {
 }
 
 type ProfilePost {
-	location: String!
+	location: Location!
 	content: String!
 	pinned: Boolean
 	reactions: ReactionData!
@@ -56,7 +56,7 @@ type ProfilePost {
 
 type Post {
 	author: User!
-	location: String!
+	location: Location!
 	content: String!
 	pinned: Boolean
 	reactions: ReactionData!

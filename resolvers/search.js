@@ -7,12 +7,9 @@ const Location = require('../models/Location')
 
 const { FEED_LIMIT_MAX, LOCATION_MAX } = require('../constants')
 const { enforceVerification } = require('../utils')
-const { ID } = require('../types.joi.js')
 
 const validators = {
 	search: Joi.object({
-		before: ID.allow(null),
-
 		query: Joi.string()
 			.trim()
 			.min(4)
@@ -44,40 +41,37 @@ const getMongoQueryFromString = string => {
 	return query
 }
 
-const getRelevantLocations = (query, predicate) =>
+const getRelevantLocations = query =>
 	Location.find(
 		{
-			$text: { $search: query },
-			...predicate
+			$text: { $search: query }
 		},
 		{ score: { $meta: 'textScore' } }
-	).sort({ score: { $meta: 'textScore' } })
-
-// const getLatestPosts = (query, predicate) =>
-// 	Location.find(
-// 		{
-// 			$text: { $search: query },
-// 			...predicate
-// 		},
-// 		{ score: { $meta: 'textScore' } }
-// 	).sort('-_id')
+	).sort({ score: { $meta: 'textScore' }, reputation: -1 })
 
 const search = async (_, data, ctx) => {
 	enforceVerification(ctx)
 
 	await validators.search.validateAsync(data)
 
-	const predicate = data.before
-		? { _id: { $lt: Types.ObjectId(data.before) } }
-		: {}
-
 	const parsedQuery = getMongoQueryFromString(data.query)
 
-	const query = getRelevantLocations(parsedQuery, predicate)
+	const query = getRelevantLocations(parsedQuery)
 
-	return query
+	const locations = (
+		await query
+			.limit(FEED_LIMIT_MAX)
+			.lean()
+			.exec()
+	).map(loc => loc._id)
+
+	return Post.find({
+		location: {
+			$in: locations
+		}
+	})
 		.limit(FEED_LIMIT_MAX)
-		.lean()
+		.sort('-_id')
 		.exec()
 }
 

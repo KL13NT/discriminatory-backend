@@ -120,7 +120,8 @@ module.exports = {
 	nested: {
 		ProfilePost: {
 			comments: nested.Post.comments,
-			reactions: nested.Post.reactions
+			reactions: nested.Post.reactions,
+			location: nested.Post.location
 		}
 	}
 }
