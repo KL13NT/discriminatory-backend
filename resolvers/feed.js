@@ -65,7 +65,6 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
  * @param {object} parent
  */
 
-// TODO: cache authors until the request is finished
 process.authorsCache = {} // TODO: replace this with actual caching backed by Redis for instance
 process.usersCache = {} // TODO: replace this with actual caching backed by Redis for instance
 const author = async parent => {
@@ -76,6 +75,8 @@ const author = async parent => {
 		})
 			.lean()
 			.exec())
+
+	process.authorsCache[parent.author] = acc
 
 	const user = process.usersCache[acc._id] || (await getUser(acc._id))
 

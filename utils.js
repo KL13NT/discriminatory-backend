@@ -113,30 +113,15 @@ const readSDL = path =>
  * @param {String} UID
  */
 const getAvatarUrlFromCache = async uid => {
-	const hrstart = process.hrtime()
 	const cached = String(await get(`AVATAR_URL:${uid}`))
 	const created = Number(await get(`AVATAR_CACHED:${uid}`))
 
-	// FIXME: fix this
 	if (cached !== 'null' && created > Date.now() - 86400 * 1000) return cached
-
-	console.log(
-		'CACHE',
-		process.hrtime(hrstart)[0],
-		process.hrtime(hrstart)[1] / 1000000
-	)
-	// TODO: move caching logic to updateAccount instead
 
 	const file = admin
 		.storage()
 		.bucket()
 		.file(`avatars/${uid}_200x200`)
-
-	console.log(
-		'FILE',
-		process.hrtime(hrstart)[0],
-		process.hrtime(hrstart)[1] / 1000000
-	)
 
 	if (!(await file.exists())[0]) return null
 
@@ -148,11 +133,6 @@ const getAvatarUrlFromCache = async uid => {
 		action: 'read',
 		expires: Date.now() + 86400 * 1000
 	})
-	console.log(
-		'CLOUD',
-		process.hrtime(hrstart)[0],
-		process.hrtime(hrstart)[1] / 1000000
-	)
 
 	set(`AVATAR_URL:${uid}`, url)
 	set(`AVATAR_CACHED:${uid}`, Date.now())
