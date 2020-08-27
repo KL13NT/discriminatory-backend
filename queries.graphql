@@ -25,4 +25,5 @@ type Query {
 	search(query: String!): [Post!]!
 	post(member: ID!, post: ID!): Post
 	explore(before: ID): [Post!]!
+	comments(post: ID!, before: ID): [Comment!]!
 }

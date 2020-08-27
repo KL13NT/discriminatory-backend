@@ -1,10 +1,12 @@
-const { model } = require('mongoose')
+const { model, Schema } = require('mongoose')
 
-const Comment = model('Comment', {
-	author: { type: String, required: true, index: true },
+const Comment = new Schema({
+	author: { type: String, required: true },
 	content: { type: String, required: true },
 	created: { type: Date, required: true },
-	post: { type: String, required: true, index: true }
+	post: { type: String, required: true }
 })
 
-module.exports = Comment
+Comment.index({ post: true })
+
+module.exports = model('Comment', Comment)

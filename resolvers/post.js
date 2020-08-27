@@ -17,7 +17,8 @@ const {
 	LOCATION_MAX,
 	LOCATION_MIN,
 	RATE_LIMIT_DUPLICATE,
-	RATE_LIMIT_GENERAL
+	RATE_LIMIT_GENERAL,
+	FEED_LIMIT_MAX
 } = require('../constants')
 const {
 	// PermissionError,
@@ -83,6 +84,11 @@ const validators = {
 			.min(1)
 			.max(160)
 			.required()
+	}),
+
+	comments: Joi.object({
+		post: ID.required(),
+		before: ID.valid(null)
 	})
 }
 
@@ -249,6 +255,7 @@ const comment = async (_, data, ctx) => {
 
 	if (
 		await Comment.exists({
+			post: data.post,
 			author: ctx.decodedToken.uid,
 			created: { $gte: Date.now() - RATE_LIMIT_GENERAL }
 		})
@@ -273,6 +280,18 @@ const getPost = (_, { member, post }) =>
 		.lean()
 		.exec()
 
+const comments = async (_, data, ctx) => {
+	await validators.comments.validateAsync(data)
+
+	return Comment.find({
+		...data,
+		before: data.before ? { $lt: data.before } : null
+	})
+		.limit(FEED_LIMIT_MAX)
+		.lean()
+		.exec()
+}
+
 module.exports = {
 	mutations: {
 		post: createPost,
@@ -283,7 +302,8 @@ module.exports = {
 		comment
 	},
 	queries: {
-		post: getPost
+		post: getPost,
+		comments
 	},
 	nested: {}
 }
