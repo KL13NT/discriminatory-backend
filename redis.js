@@ -11,9 +11,13 @@ client.on('error', error => {
 
 const get = promisify(client.get).bind(client)
 const set = promisify(client.set).bind(client)
+const expire = promisify(client.expire).bind(client)
+const incr = promisify(client.incr).bind(client)
 
 module.exports = {
 	get,
 	set,
+	expire,
+	incr,
 	client
 }

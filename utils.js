@@ -8,9 +8,8 @@ const {
 	UserInputError
 } = require('apollo-server-express')
 
-const { set, get } = require('./redis')
+const { set, get, expire } = require('./redis')
 const { RATE_LIMIT_BASE } = require('./constants')
-const { RateLimitError } = require('./errors')
 
 /**
  * @param {string} token
@@ -51,25 +50,47 @@ const enforceVerification = ({ authenticated, verified }) => {
  * @param {ExpressContext} ExpressContext
  */
 const createApolloContext = async ({ req }) => {
-	const hrstart = process.hrtime()
 	const token = req.headers.authorization || ''
 
 	if (!token) return {}
 
 	try {
+		const cached = await get(`T:${token}`)
+
+		if (cached) {
+			const [uid, email] = await Promise.all([
+				get(`T:${token}:UID`),
+				get(`T:${token}:EMAIL`)
+			])
+
+			return {
+				token,
+				decodedToken: {
+					uid,
+					email
+				},
+				authenticated: true,
+				verified: true
+			}
+		}
+
 		const decodedToken = await verifyToken(token)
 		const authenticated = Boolean(decodedToken)
 
-		const lastOp = await get(`OP:${decodedToken.uid}`)
-		if (
-			lastOp &&
-			new Date(Number(lastOp)) >= new Date(Date.now() - RATE_LIMIT_BASE)
-		)
-			throw new RateLimitError('[Rate Limit] Whoa, slow down')
-		else set(`OP:${decodedToken.uid}`, Date.now())
+		if (decodedToken.email_verified) {
+			await Promise.all([
+				set(`T:${token}`, token),
+				set(`T:${token}:UID`, decodedToken.uid),
+				set(`T:${token}:EMAIL`, decodedToken.email)
+			])
 
-		const end = process.hrtime(hrstart)
-		console.log('TOKEN', end[0], end[1] / 1000000)
+			await Promise.all([
+				expire(`T:${token}`, 60 * 60 /* 1 hour */),
+				expire(`T:${token}:UID`, 60 * 60 /* 1 hour */),
+				expire(`T:${token}:EMAIL`, 60 * 60 /* 1 hour */)
+			])
+		}
+
 		return {
 			token,
 			decodedToken,
@@ -77,16 +98,17 @@ const createApolloContext = async ({ req }) => {
 			verified: decodedToken.email_verified
 		}
 	} catch (error) {
-		const end = process.hrtime(hrstart)
-		console.log('NO TOKEN', end[0], end[1] / 1000000)
 		return {}
 	}
 }
 
+const shouldLimit = last =>
+	new Date(last) >= new Date(Date.now() - RATE_LIMIT_BASE)
+
 const formatError = err => {
 	const error = err.originalError || err
 	// eslint-disable-next-line no-console
-	console.log(error)
+	console.log('error: ', error)
 
 	if (error instanceof ValidationError) {
 		return new UserInputError(`[Validation] ${error.message}`, {
@@ -148,5 +170,6 @@ module.exports = {
 	readSDL,
 	createApolloContext,
 	formatError,
+	shouldLimit,
 	getAvatarUrlFromCache
 }
