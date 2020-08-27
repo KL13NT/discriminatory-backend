@@ -5,7 +5,6 @@ const { AuthenticationError } = require('apollo-server-express')
 
 const Post = require('../models/Post')
 const Reaction = require('../models/Reaction')
-const User = require('../models/User')
 const Location = require('../models/Location')
 const Comment = require('../models/Comment')
 // const Report = require('../models/Report')
@@ -28,6 +27,14 @@ const {
 } = require('../errors')
 
 const validators = {
+	getPost: Joi.object({
+		member: Joi.string()
+			.trim()
+			.min(1)
+			.required(),
+
+		post: ID.required()
+	}),
 	createPost: Joi.object({
 		content: Joi.string()
 			.trim()
@@ -76,17 +83,6 @@ const validators = {
 			.min(1)
 			.max(160)
 			.required()
-	}),
-
-	posts: Joi.object({
-		limit: Joi.number()
-			.min(5)
-			.max(20)
-			.required(),
-
-		member: ID,
-
-		before: Joi.date().required()
 	})
 }
 
@@ -201,9 +197,7 @@ const pin = async (_, data, ctx) => {
 	const pinned = await Post.findOne({
 		author: ctx.decodedToken.uid,
 		pinned: true
-	})
-		.lean()
-		.exec()
+	}).exec()
 
 	await Promise.all([
 		post.updateOne({ pinned: true }),
@@ -274,6 +268,11 @@ const comment = async (_, data, ctx) => {
 	)._id
 }
 
+const getPost = (_, { member, post }) =>
+	Post.findOne({ author: member, _id: post })
+		.lean()
+		.exec()
+
 module.exports = {
 	mutations: {
 		post: createPost,
@@ -284,7 +283,7 @@ module.exports = {
 		comment
 	},
 	queries: {
-		// posts: getPosts
+		post: getPost
 	},
 	nested: {}
 }

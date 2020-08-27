@@ -6,6 +6,7 @@ const User = model('User', {
 	location: { type: String, required: true },
 	tagline: { type: String, required: false },
 	pinned: { type: String, required: false },
+	created: { type: Date, required: true, default: Date.now() },
 	_id: { type: String, required: true }
 })
 
