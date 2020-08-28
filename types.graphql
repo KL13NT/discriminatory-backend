@@ -1,6 +1,7 @@
 # union ACCESS_LEVEL = ADMIN | SUPPORT | VERIFIED | GENERAL | ANONYMOUS
 # union REACTION = UPVOTE | DOWNVOTE
 scalar Long
+scalar Void
 
 type Badge {
 	name: String!

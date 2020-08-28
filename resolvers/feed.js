@@ -96,7 +96,7 @@ const location = async ({ location }) =>
 
 const comments = async ({ _id }) =>
 	Comment.find({ post: _id })
-		.limit(10)
+		.limit(5)
 		.lean()
 		.sort('-_id')
 		.exec()

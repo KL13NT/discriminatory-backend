@@ -9,7 +9,8 @@ type Mutation {
 	react(post: ID!, reaction: String!): Reaction!
 	comment(post: ID!, content: String!): ID!
 
-	pin(post: ID!): ID!
+	pin(post: ID!): Void
+	unpin(post: ID!): Void
 	# report(post: ID!, reason: String!): ID!
 
 	# ACTIONS RELATED TO MEMBER-RELATIONS

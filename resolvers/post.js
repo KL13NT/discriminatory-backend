@@ -1,7 +1,7 @@
 /* eslint-disable no-return-await */
 
 const Joi = require('@hapi/joi')
-const { AuthenticationError } = require('apollo-server-express')
+const { AuthenticationError, ApolloError } = require('apollo-server-express')
 
 const Post = require('../models/Post')
 const Reaction = require('../models/Reaction')
@@ -88,7 +88,7 @@ const validators = {
 
 	comments: Joi.object({
 		post: ID.required(),
-		before: ID.valid(null)
+		before: ID.allow(null)
 	})
 }
 
@@ -213,6 +213,38 @@ const pin = async (_, data, ctx) => {
 	return post._id
 }
 
+const unpin = async (_, data, ctx) => {
+	enforceVerification(ctx)
+
+	await validators.pin.validateAsync(data)
+
+	const post = await Post.findOne({
+		author: ctx.decodedToken.uid,
+		_id: data.post
+	}).exec()
+
+	if (!post) return new NotFoundError('[404] Resource not found', 'NOT_FOUND')
+
+	if (post.author !== ctx.decodedToken.uid) {
+		return AuthenticationError(
+			'[Auth] You do not have permission to pin this post'
+		)
+	}
+
+	if (!post.pinned)
+		return new ApolloError(
+			'[NOT APPLICABLE] This post is not pinned',
+			'NOT_APPLICABLE'
+		)
+
+	return post
+		.updateOne({
+			pinned: false
+		})
+		.lean()
+		.exec()
+}
+
 // const report = async (_, data, ctx) => {
 // 	enforceVerification(ctx)
 
@@ -280,14 +312,14 @@ const getPost = (_, { member, post }) =>
 		.lean()
 		.exec()
 
-const comments = async (_, data, ctx) => {
+const comments = async (_, data) => {
 	await validators.comments.validateAsync(data)
 
 	return Comment.find({
-		...data,
-		before: data.before ? { $lt: data.before } : null
+		post: data.post,
+		_id: data.before ? { $lt: data.before } : null
 	})
-		.limit(FEED_LIMIT_MAX)
+		.limit(5)
 		.lean()
 		.exec()
 }
@@ -298,6 +330,7 @@ module.exports = {
 		delete: deletePost,
 		react,
 		pin,
+		unpin,
 		// report,
 		comment
 	},

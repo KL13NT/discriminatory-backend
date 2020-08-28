@@ -4,7 +4,7 @@ const admin = require('firebase-admin')
 const depthLimit = require('graphql-depth-limit')
 const { json } = require('express')
 const { ApolloServer } = require('apollo-server-express')
-const { LongResolver } = require('graphql-scalars')
+const { LongResolver, VoidResolver } = require('graphql-scalars')
 
 const firebaseCreds = require('./admin.firebase.json')
 
@@ -42,7 +42,8 @@ const startServer = async () => {
 		typeDefs,
 		resolvers: {
 			...resolvers,
-			Long: LongResolver
+			Long: LongResolver,
+			Void: VoidResolver
 		},
 		context,
 		formatError,
