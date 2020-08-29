@@ -141,23 +141,20 @@ const react = async (_, data, { authenticated, decodedToken, verified }) => {
 
 	await validators.react.validateAsync(data)
 
-	const post = await Post.findOne({ _id: data.post })
-		.lean()
-		.exec()
+	const post = await Post.find({ _id: data.post }).countDocuments()
 
 	if (!post) return new NotFoundError('[404] Resource not found', 'NOT_FOUND')
 
-	const reaction = await Reaction.findOneAndUpdate(
+	return Reaction.findOneAndUpdate(
 		{
-			post: data.post
+			post: data.post,
+			author: decodedToken.uid
 		},
 		{ ...data, author: decodedToken.uid, created: Date.now() },
 		{ upsert: true, new: true }
 	)
 		.lean()
 		.exec()
-
-	return reaction
 }
 
 const deletePost = async (_, data, ctx) => {

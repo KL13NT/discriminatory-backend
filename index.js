@@ -1,11 +1,13 @@
 const express = require('express')
 const mongoose = require('mongoose')
 const admin = require('firebase-admin')
+const LRU = require('tiny-lru')
 const depthLimit = require('graphql-depth-limit')
-const { json } = require('express')
 const { ApolloServer } = require('apollo-server-express')
 const { LongResolver, VoidResolver } = require('graphql-scalars')
 
+const { makeExecutableSchema } = require('graphql-tools')
+const { compileQuery, isCompiledQuery } = require('graphql-jit')
 const firebaseCreds = require('./admin.firebase.json')
 
 const { RateLimitError } = require('./errors')
@@ -32,8 +34,44 @@ const config = {
 
 admin.initializeApp(config)
 
-// Resolvers depend on admin initialized so keep them here
+// Resolvers depend on admin initialized so keep them after initializing
 const resolvers = require('./resolvers')
+
+const schema = makeExecutableSchema({
+	resolvers: {
+		...resolvers,
+		Long: LongResolver,
+		Void: VoidResolver
+	},
+	typeDefs
+})
+
+const executor = (schema, cacheSize = 1024, compilerOpts = {}) => {
+	const cache = LRU(cacheSize)
+
+	return async ({ context, document, operationName, request, queryHash }) => {
+		const prefix = operationName || 'NotParametrized'
+		const cacheKey = `${prefix}-${queryHash}`
+		let compiledQuery = cache.get(cacheKey)
+
+		if (!compiledQuery) {
+			const compilationResult = compileQuery(
+				schema,
+				document,
+				operationName || undefined,
+				compilerOpts
+			)
+			if (isCompiledQuery(compilationResult)) {
+				compiledQuery = compilationResult
+				cache.set(cacheKey, compiledQuery)
+			} else {
+				return compilationResult
+			}
+		}
+
+		return compiledQuery.query(undefined, context, request.variables || {})
+	}
+}
 
 const startServer = async () => {
 	const app = express()
@@ -50,6 +88,9 @@ const startServer = async () => {
 		persistedQueries: {
 			cache: {}
 		},
+		skipValidation: true,
+		tracing: false,
+		executor: executor(schema),
 		validationRules: [depthLimit(5)]
 	})
 
@@ -66,19 +107,19 @@ const startServer = async () => {
 
 		const last = await get(`REQ:${ip}`)
 		if (last) {
-			await incr(`REQ:${ip}`)
-
 			if (Number(last) > RATE_LIMIT_REQ)
-				return new RateLimitError('[Rate Limit] Whoa, slow down')
+				return res.status(429).send('Too many requests')
+
+			await incr(`REQ:${ip}`)
+			next()
 		} else {
 			await set(`REQ:${ip}`, 1)
 			await expire(`REQ:${ip}`, 60)
+			next()
 		}
-
-		next()
 	})
 
-	app.use(json({ limit: '2mb' }))
+	app.use(express.json({ limit: '2mb' }))
 	server.applyMiddleware({ app })
 
 	await mongoose.connect('mongodb://localhost:27017/discriminatory', {
