@@ -1,5 +1,4 @@
 const Joi = require('@hapi/joi')
-const firebase = require('firebase-admin')
 
 const User = require('../models/User')
 
@@ -11,9 +10,12 @@ const {
 	PROFILE_LOCATION_MAX,
 	PROFILE_LOCATION_MIN
 } = require('../constants')
-const { enforceVerification, getAvatarUrlFromCache } = require('../utils')
+const {
+	enforceVerification,
+	getAvatarUrlFromCache,
+	getUser
+} = require('../utils')
 const { NotFoundError } = require('../errors')
-const { set, get } = require('../redis')
 
 const validators = {
 	updateAccount: Joi.object({
@@ -56,7 +58,9 @@ const updateAccount = async (
 }
 
 const getAccount = async (_, _2, { decodedToken, authenticated, verified }) => {
-	const user = await firebase.auth().getUser(decodedToken.uid)
+	enforceVerification({ authenticated, verified })
+
+	const user = await getUser(decodedToken.uid)
 	if (!user) return new NotFoundError('A user with this id was not found')
 
 	const account = await User.findById(decodedToken.uid)

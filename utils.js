@@ -8,7 +8,7 @@ const {
 	UserInputError
 } = require('apollo-server-express')
 
-const { set, get, expire } = require('./redis')
+const LRU = require('tiny-lru')
 const { RATE_LIMIT_BASE } = require('./constants')
 
 /**
@@ -22,9 +22,14 @@ const verifyToken = async token =>
  * @param {string} uid
  * @returns firebase.auth.UserRecord or null
  */
+const users = LRU(1000)
 const getUser = async uid => {
 	try {
-		return admin.auth().getUser(uid)
+		const user = users.get(uid) || (await admin.auth().getUser(uid))
+
+		if (user) users.set(uid, user)
+
+		return user
 	} catch (err) {
 		return null
 	}
@@ -49,26 +54,19 @@ const enforceVerification = ({ authenticated, verified }) => {
  * Returns a proper context for resolvers or throws to stop a request
  * @param {ExpressContext} ExpressContext
  */
+const tokens = LRU(1024, 60 * 60 * 1000 /* 1 hour */)
 const createApolloContext = async ({ req }) => {
-	const token = req.headers.authorization || ''
+	const token = (req.headers.authorization || '').replace('Bearer ', '')
 
 	if (!token) return {}
 
 	try {
-		const cached = await get(`T:${token}`)
+		const cached = tokens.get(token)
 
 		if (cached) {
-			const [uid, email] = await Promise.all([
-				get(`T:${token}:UID`),
-				get(`T:${token}:EMAIL`)
-			])
-
 			return {
 				token,
-				decodedToken: {
-					uid,
-					email
-				},
+				decodedToken: cached,
 				authenticated: true,
 				verified: true
 			}
@@ -77,19 +75,7 @@ const createApolloContext = async ({ req }) => {
 		const decodedToken = await verifyToken(token)
 		const authenticated = Boolean(decodedToken)
 
-		if (decodedToken.email_verified) {
-			await Promise.all([
-				set(`T:${token}`, token),
-				set(`T:${token}:UID`, decodedToken.uid),
-				set(`T:${token}:EMAIL`, decodedToken.email)
-			])
-
-			await Promise.all([
-				expire(`T:${token}`, 60 * 60 /* 1 hour */),
-				expire(`T:${token}:UID`, 60 * 60 /* 1 hour */),
-				expire(`T:${token}:EMAIL`, 60 * 60 /* 1 hour */)
-			])
-		}
+		if (decodedToken.email_verified) tokens.set(token, decodedToken)
 
 		return {
 			token,
@@ -98,6 +84,7 @@ const createApolloContext = async ({ req }) => {
 			verified: decodedToken.email_verified
 		}
 	} catch (error) {
+		console.log(error)
 		return {}
 	}
 }
@@ -134,11 +121,11 @@ const readSDL = path =>
  * Controls the cache of image urls
  * @param {String} UID
  */
+const avatars = LRU(1024, 7 * 24 * 60 * 60 * 1000 /* 7 days */)
 const getAvatarUrlFromCache = async uid => {
-	const cached = String(await get(`AVATAR_URL:${uid}`))
-	const created = Number(await get(`AVATAR_CACHED:${uid}`))
+	const cached = avatars.get(uid)
 
-	if (cached !== 'null' && created > Date.now() - 86400 * 1000) return cached
+	if (cached) return cached
 
 	const file = admin
 		.storage()
@@ -156,8 +143,7 @@ const getAvatarUrlFromCache = async uid => {
 		expires: Date.now() + 86400 * 1000
 	})
 
-	set(`AVATAR_URL:${uid}`, url)
-	set(`AVATAR_CACHED:${uid}`, Date.now())
+	avatars.set(uid, url)
 
 	return url
 }

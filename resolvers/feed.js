@@ -2,7 +2,7 @@
 const Joi = require('@hapi/joi')
 const { Types, isValidObjectId } = require('mongoose')
 const { ValidationError } = require('apollo-server-express')
-
+const LRU = require('tiny-lru')
 const Post = require('../models/Post')
 const Follow = require('../models/Follow')
 const User = require('../models/User')
@@ -65,22 +65,19 @@ const feed = async (_, data, { decodedToken, authenticated, verified }) => {
  * @param {object} parent
  */
 
-process.authorsCache = {} // TODO: replace this with actual caching backed by Redis for instance
-process.usersCache = {} // TODO: replace this with actual caching backed by Redis for instance
+const authors = LRU(500)
 const author = async parent => {
 	const acc =
-		process.authorsCache[parent.author] ||
+		authors.get(parent.author) ||
 		(await User.findOne({
 			_id: parent.author
 		})
 			.lean()
 			.exec())
 
-	process.authorsCache[parent.author] = acc
+	authors.set(parent.author, acc)
 
-	const user = process.usersCache[acc._id] || (await getUser(acc._id))
-
-	process.usersCache[acc._id] = user
+	const user = await getUser(acc._id)
 
 	return {
 		...acc,
@@ -89,17 +86,31 @@ const author = async parent => {
 	}
 }
 
-const location = async ({ location }) =>
-	Location.findOne({ _id: location })
-		.lean()
-		.exec()
+const locations = LRU(500)
+const location = async ({ location }) => {
+	const found =
+		locations.get(location) ||
+		(await Location.findOne({ _id: location })
+			.lean()
+			.exec())
 
-const comments = async ({ _id }) =>
-	Comment.find({ post: _id })
-		.limit(5)
-		.lean()
-		.sort('-_id')
-		.exec()
+	locations.set(location, found)
+	return found
+}
+
+const commentsLRU = LRU(500)
+const comments = async ({ _id }) => {
+	const found =
+		commentsLRU.get(_id) ||
+		(await Comment.find({ post: _id })
+			.limit(5)
+			.lean()
+			.sort('-_id')
+			.exec())
+
+	commentsLRU.set(_id, found)
+	return found
+}
 
 const reactions = async ({ _id: post }, _, { decodedToken }) => {
 	const upvotes = await Reaction.find({

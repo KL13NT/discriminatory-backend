@@ -117,11 +117,5 @@ module.exports = {
 	queries: {
 		profile
 	},
-	nested: {
-		ProfilePost: {
-			comments: nested.Post.comments,
-			reactions: nested.Post.reactions,
-			location: nested.Post.location
-		}
-	}
+	nested: {}
 }

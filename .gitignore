@@ -125,3 +125,7 @@ data/
 docs/*
 
 *.rdb
+.ebextensions
+.clinic
+*.zip
+*.rar

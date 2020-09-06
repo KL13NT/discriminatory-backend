@@ -1,9 +1,11 @@
-const { model } = require('mongoose')
+const { model, Schema } = require('mongoose')
 
-const Follow = model('Follow', {
+const Follow = new Schema({
 	following: { type: String, required: true },
 	created: { type: Date, required: true },
-	author: { type: String, required: true, index: true }
+	author: { type: String, required: true }
 })
 
-module.exports = Follow
+Follow.index({ author: true })
+
+module.exports = model('Follow', Follow)
