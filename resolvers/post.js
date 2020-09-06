@@ -304,10 +304,15 @@ const comment = async (_, data, ctx) => {
 	)._id
 }
 
-const getPost = (_, { member, post }) =>
-	Post.findOne({ author: member, _id: post })
+const getPost = async (_, { member, post }) => {
+	const found = await Post.findOne({ author: member, _id: post })
 		.lean()
 		.exec()
+
+	if (!found) return NotFoundError('[Not Found] Post was not found')
+
+	return found
+}
 
 const comments = async (_, data) => {
 	await validators.comments.validateAsync(data)
