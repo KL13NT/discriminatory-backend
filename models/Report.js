@@ -1,9 +1,11 @@
-const { model } = require('mongoose')
+const { model, Schema, Types } = require('mongoose')
 
-const Report = model('Report', {
-	author: { type: String, required: true, index: true },
+const Report = new Schema({
+	author: { type: String, required: true },
 	reason: { type: String, required: true },
-	post: { type: String, required: true, index: true }
+	post: { type: Types.ObjectId, required: true }
 })
 
-module.exports = Report
+Report.index({ author: true, post: true })
+
+module.exports = model('Report', Report)

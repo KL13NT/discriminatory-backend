@@ -1,10 +1,12 @@
-const { model } = require('mongoose')
+const { model, Types, Schema } = require('mongoose')
 
-const Reaction = model('Reaction', {
+const Reaction = new Schema({
 	author: { type: String, required: true },
 	reaction: { type: String, required: true },
 	created: { type: Date, required: true },
-	post: { type: String, required: true, index: true }
+	post: { type: Types.ObjectId, required: true }
 })
 
-module.exports = Reaction
+Reaction.index({ post: true })
+
+module.exports = model('Reaction', Reaction)

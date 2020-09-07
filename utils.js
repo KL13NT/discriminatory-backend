@@ -2,6 +2,7 @@ const { readFileSync } = require('fs')
 const { resolve } = require('path')
 
 const admin = require('firebase-admin')
+const { ValidationError: JoiValidationError } = require('@hapi/joi')
 const {
 	AuthenticationError,
 	ValidationError,
@@ -96,6 +97,12 @@ const formatError = err => {
 	const error = err.originalError || err
 	// eslint-disable-next-line no-console
 	console.log('error: ', error)
+
+	if (error instanceof JoiValidationError) {
+		return new UserInputError(`[Validation] ${error.message}`, {
+			...error.details[0]
+		})
+	}
 
 	if (error instanceof ValidationError) {
 		return new UserInputError(`[Validation] ${error.message}`, {

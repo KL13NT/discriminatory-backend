@@ -1,6 +1,6 @@
 /* eslint-disable no-return-await */
 const Joi = require('@hapi/joi')
-const { Types, isValidObjectId } = require('mongoose')
+const { isValidObjectId } = require('mongoose')
 const { ValidationError } = require('apollo-server-express')
 const LRU = require('tiny-lru')
 const Post = require('../models/Post')
@@ -98,14 +98,14 @@ const location = async ({ location }) => {
 	return found
 }
 
-const commentsLRU = LRU(500)
+const commentsLRU = LRU(1024)
 const comments = async ({ _id }) => {
 	const found =
 		commentsLRU.get(_id) ||
 		(await Comment.find({ post: _id })
+			.sort('-_id')
 			.limit(5)
 			.lean()
-			.sort('-_id')
 			.exec())
 
 	commentsLRU.set(_id, found)

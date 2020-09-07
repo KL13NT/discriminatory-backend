@@ -3,6 +3,7 @@
 const Joi = require('@hapi/joi')
 const { AuthenticationError, ApolloError } = require('apollo-server-express')
 
+const { Types } = require('mongoose')
 const Post = require('../models/Post')
 const Reaction = require('../models/Reaction')
 const Location = require('../models/Location')
@@ -141,13 +142,15 @@ const react = async (_, data, { authenticated, decodedToken, verified }) => {
 
 	await validators.react.validateAsync(data)
 
-	const post = await Post.find({ _id: data.post }).countDocuments()
+	const post = await Post.find({
+		_id: Types.ObjectId(data.post)
+	}).countDocuments()
 
 	if (!post) return new NotFoundError('[404] Resource not found', 'NOT_FOUND')
 
 	return Reaction.findOneAndUpdate(
 		{
-			post: data.post,
+			post: Types.ObjectId(data.post),
 			author: decodedToken.uid
 		},
 		{ ...data, author: decodedToken.uid, created: Date.now() },
@@ -296,7 +299,7 @@ const comment = async (_, data, ctx) => {
 
 	return (
 		await Comment.create({
-			post: data.post,
+			post: Types.ObjectId(data.post),
 			author: ctx.decodedToken.uid,
 			content: data.content,
 			created: Date.now()
@@ -305,6 +308,8 @@ const comment = async (_, data, ctx) => {
 }
 
 const getPost = async (_, { member, post }) => {
+	await validators.getPost.validateAsync({ member, post })
+
 	const found = await Post.findOne({ author: member, _id: post })
 		.lean()
 		.exec()

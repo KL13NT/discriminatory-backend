@@ -29,8 +29,9 @@ const explore = async (_, data) => {
 
 	return Post.find(query)
 		.limit(FEED_LIMIT_MAX)
-		.lean()
 		.sort('-_id')
+		.lean()
+		.exec()
 }
 
 const { nested } = require('./feed')
@@ -42,27 +43,6 @@ module.exports = {
 	},
 	nested
 }
-
-// /* eslint-disable no-return-await */
-// const Joi = require('@hapi/joi')
-// const { Types } = require('mongoose')
-
-// const Post = require('../models/Post')
-
-// const { FEED_LIMIT_MAX } = require('../constants')
-// const { ID } = require('../types.joi.js')
-
-// const validators = {
-// 	feed: Joi.object({
-// 		before: ID.allow(null)
-// 	})
-// }
-
-// /**
-//  * Base resolvers
-//  */
-
-// const { nested } = require('./feed')
 
 // const explore = async (_, data) => {
 // 	await validators.feed.validateAsync(data)
@@ -96,11 +76,3 @@ module.exports = {
 
 // 	return Promise.all(full)
 // }
-
-module.exports = {
-	mutations: {},
-	queries: {
-		explore
-	},
-	nested
-}
