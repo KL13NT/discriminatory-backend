@@ -3,7 +3,6 @@
  */
 
 const Joi = require('@hapi/joi')
-const { Types } = require('mongoose')
 const { ID } = require('../types.joi')
 
 const User = require('../models/User')
@@ -92,8 +91,8 @@ const profile = async (_, data, ctx) => {
 			postCount
 		}
 	}
-	// FIXME: doesn't return proper before
 
+	// FIXME: doesn't return proper before
 	const [posts] = await Promise.all([
 		Post.find(query, { pinned: 0 })
 			.limit(FEED_LIMIT_MAX)

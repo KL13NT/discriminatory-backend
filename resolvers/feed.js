@@ -82,7 +82,7 @@ const author = async parent => {
 	return {
 		...acc,
 		avatar: await getAvatarUrlFromCache(acc._id),
-		verified: user.emailVerified
+		verified: user ? user.emailVerified : null
 	}
 }
 
@@ -98,17 +98,17 @@ const location = async ({ location }) => {
 	return found
 }
 
-const commentsLRU = LRU(1024)
+// const commentsLRU = LRU(1024)
 const comments = async ({ _id }) => {
 	const found =
-		commentsLRU.get(_id) ||
-		(await Comment.find({ post: _id })
+		// commentsLRU.get(_id) ||
+		await Comment.find({ post: _id })
 			.sort('-_id')
 			.limit(5)
 			.lean()
-			.exec())
+			.exec()
 
-	commentsLRU.set(_id, found)
+	// if (found && found.length > 0) commentsLRU.set(_id, found)
 	return found
 }
 

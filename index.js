@@ -1,4 +1,13 @@
-const { FIREBASE_DB, FIREBASE_BUCKET, ORIGIN, DB_HOST, PORT } = process.env
+const {
+	FIREBASE_DB,
+	FIREBASE_BUCKET,
+	FIREBASE_PROJECT_ID,
+	FIREBASE_CLIENT_EMAIL,
+	FIREBASE_PRIVATE_KEY,
+	ORIGIN,
+	DB_HOST,
+	PORT
+} = process.env
 
 const admin = require('firebase-admin')
 const express = require('express')
@@ -12,13 +21,14 @@ const { ApolloServer } = require('apollo-server-express')
 const { LongResolver, VoidResolver, JSONResolver } = require('graphql-scalars')
 const { makeExecutableSchema } = require('graphql-tools')
 const { compileQuery, isCompiledQuery } = require('graphql-jit')
+const { incr, set, get, expire } = require('./redis')
+const { RATE_LIMIT_REQ } = require('./constants')
+
 const {
 	readSDL,
 	formatError,
 	createApolloContext: context
 } = require('./utils')
-
-const firebaseCreds = require('./admin.firebase.json')
 
 const types = readSDL('./types.graphql')
 const queries = readSDL('./queries.graphql')
@@ -26,7 +36,11 @@ const typeDefs = `${types}\n${queries}`
 
 const fbConfig = {
 	databaseURL: FIREBASE_DB,
-	credential: admin.credential.cert(firebaseCreds),
+	credential: admin.credential.cert({
+		projectId: FIREBASE_PROJECT_ID,
+		clientEmail: FIREBASE_CLIENT_EMAIL,
+		privateKey: FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+	}),
 	storageBucket: FIREBASE_BUCKET
 }
 
@@ -91,30 +105,32 @@ const startServer = async () => {
 		validationRules: [depthLimit(5)]
 	})
 
-	// app.use(async (req, res, next) => {
-	// 	const forwarded = req.headers['x-forwarded-for']
-	// 	const ip =
-	// 		(Array.isArray(forwarded) ? forwarded.shift() : forwarded || '')
-	// 			.split(',')
-	// 			.pop()
-	// 			.trim() ||
-	// 		req.connection.remoteAddress ||
-	// 		req.socket.remoteAddress ||
-	// 		req.connection.socket.remoteAddress
+	app.use(async (req, res, next) => {
+		const forwarded = req.headers['x-forwarded-for']
+		const ip =
+			(Array.isArray(forwarded) ? forwarded.shift() : forwarded || '')
+				.split(',')
+				.pop()
+				.trim() ||
+			req.connection.remoteAddress ||
+			req.socket.remoteAddress ||
+			req.connection.socket.remoteAddress
 
-	// 	const last = await get(`REQ:${ip}`)
-	// 	if (last) {
-	// 		if (Number(last) > RATE_LIMIT_REQ)
-	// 			return res.status(429).send('Too many requests') // TODO: re-enable after benchmarking
+		const last = await get(`REQ:${ip}`)
+		if (last) {
+			if (Number(last) > RATE_LIMIT_REQ) {
+				res.status(429).send('Too many requests')
+				return
+			}
 
-	// 		await incr(`REQ:${ip}`)
-	// 		next()
-	// 	} else {
-	// 		await set(`REQ:${ip}`, 1)
-	// 		await expire(`REQ:${ip}`, 60)
-	// 		next()
-	// 	}
-	// })
+			await incr(`REQ:${ip}`)
+			next()
+		} else {
+			await set(`REQ:${ip}`, 1)
+			await expire(`REQ:${ip}`, 60)
+			next()
+		}
+	})
 
 	app.use(
 		cors({
