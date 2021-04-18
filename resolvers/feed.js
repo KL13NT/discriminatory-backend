@@ -129,19 +129,27 @@ const reactions = async ({ _id: post }, _, { decodedToken }) => {
 		.lean()
 		.exec()
 
-	const reaction = decodedToken
-		? await Reaction.findOne({
-				author: decodedToken.uid,
-				post
-		  })
-				.lean()
-				.exec()
-		: null
+	if (decodedToken) {
+		const found = await Reaction.findOne({
+			author: decodedToken.uid,
+			post
+		})
+			.lean()
+			.exec()
+
+		const reaction = found ? found.reaction : null
+
+		return {
+			upvotes,
+			downvotes,
+			reaction
+		}
+	}
 
 	return {
 		upvotes,
 		downvotes,
-		reaction: reaction ? reaction.reaction : null
+		reaction: null
 	}
 }
 

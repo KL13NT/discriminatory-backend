@@ -18,8 +18,7 @@ const {
 	LOCATION_MAX,
 	LOCATION_MIN,
 	RATE_LIMIT_DUPLICATE,
-	RATE_LIMIT_GENERAL,
-	FEED_LIMIT_MAX
+	RATE_LIMIT_GENERAL
 } = require('../constants')
 const {
 	// PermissionError,

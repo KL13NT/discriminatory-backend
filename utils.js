@@ -85,7 +85,6 @@ const createApolloContext = async ({ req }) => {
 			verified: decodedToken.email_verified
 		}
 	} catch (error) {
-		console.log(error)
 		return {}
 	}
 }
@@ -141,16 +140,17 @@ const getAvatarUrlFromCache = async uid => {
 
 	if (!(await file.exists())[0]) return null
 
-	await file.setMetadata({
-		cacheControl: 'private,max-age=86400'
-	})
-
 	const [url] = await file.getSignedUrl({
 		action: 'read',
-		expires: Date.now() + 86400 * 1000
+		expires: Date.now() + 86400 * 1000 /* 24 hours */
 	})
 
 	avatars.set(uid, url)
+
+	if (file.metadata.cacheControl !== 'public,max-age=86400')
+		await file.setMetadata({
+			cacheControl: 'public,max-age=86400' /* 24 hours */
+		})
 
 	return url
 }
