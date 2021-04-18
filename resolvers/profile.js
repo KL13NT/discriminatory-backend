@@ -25,7 +25,6 @@ const validators = {
 	})
 }
 
-// REFACTORME: MOVE THIS QUERY TO TWO SEPARATE< ONE FOR DATA< ONE FOR POSTS
 const profile = async (_, data, ctx) => {
 	enforceVerification(ctx)
 
@@ -44,25 +43,15 @@ const profile = async (_, data, ctx) => {
 		.lean()
 		.exec()
 
-	const query =
-		data.before === null
-			? { author: user._id }
-			: {
-					_id: { $lt: data.before },
-					author: user._id
-			  }
-
-	const pinnedQuery = { author: user._id, pinned: true }
+	const query = { author: user._id }
+	if (data.before) query._id = { $lt: data.before }
 
 	if (!data.before) {
-		const [posts, pinned, postCount] = await Promise.all([
-			Post.find(query, { pinned: 0 })
+		const [posts, postCount] = await Promise.all([
+			Post.find(query)
 				.limit(FEED_LIMIT_MAX)
 				.sort('-_id')
-				.lean()
-				.exec(),
-
-			Post.findOne(pinnedQuery)
+				.sort('-pinned')
 				.lean()
 				.exec(),
 
@@ -71,15 +60,6 @@ const profile = async (_, data, ctx) => {
 				.exec()
 		])
 
-		let final = posts
-
-		if (pinned) {
-			final = [
-				pinned,
-				...posts.filter(post => String(post._id) !== String(pinned._id))
-			]
-		}
-
 		return {
 			user: {
 				...user,
@@ -87,12 +67,11 @@ const profile = async (_, data, ctx) => {
 				verified: ctx.verified
 			},
 			following: Boolean(following),
-			posts: final,
+			posts,
 			postCount
 		}
 	}
 
-	// FIXME: doesn't return proper before
 	const [posts] = await Promise.all([
 		Post.find(query, { pinned: 0 })
 			.limit(FEED_LIMIT_MAX)
@@ -116,5 +95,5 @@ module.exports = {
 	queries: {
 		profile
 	},
-	nested: {}
+	nested
 }
